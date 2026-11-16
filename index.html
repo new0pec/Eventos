@@ -70,9 +70,6 @@
     align-items: center;
     justify-content: center;
   }
-  body.blurred {
-    filter: blur(8px) brightness(0.85);
-  }
   .container {
     max-width: 480px;
     margin: 0 auto;
@@ -376,11 +373,15 @@
     font-family: inherit; cursor: pointer;
   }
 
-  /* Seletor de datas (computador) */
+  /* Seletor de datas (igual no iPhone e no computador) */
   .datepicker-overlay {
     display: none;
     position: fixed;
-    inset: 0;
+    top: calc(-1 * env(safe-area-inset-top, 0px));
+    bottom: calc(-1 * env(safe-area-inset-bottom, 0px));
+    left: 0;
+    right: 0;
+    padding: calc(16px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px));
     background: var(--scrim);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
@@ -397,7 +398,8 @@
     box-shadow: var(--glass-shadow);
     border-radius: var(--radius);
     padding: 20px;
-    width: 340px;
+    width: 100%;
+    max-width: 360px;
     color: var(--text);
   }
   .datepicker-header {
@@ -444,7 +446,7 @@
     font-size: 15px;
     transition: background 0.15s;
   }
-  .datepicker-day:hover { background: rgba(255, 255, 255, 0.7); }
+  @media (hover: hover) { .datepicker-day:hover { background: rgba(255, 255, 255, 0.7); } }
   .datepicker-day.other-month { color: var(--text-muted); cursor: default; }
   .datepicker-day.selected { background: var(--accent-strong); color: #fff; font-weight: 600; }
   .datepicker-day.today { border: 2px solid var(--accent-strong); }
@@ -473,13 +475,6 @@
     color: #fff;
   }
 
-  @media (max-width: 768px) {
-    .datepicker-overlay { display: none !important; }
-    .date-display { display: none; }
-  }
-  @media (min-width: 769px) {
-    #startDate { display: none; }
-  }
   @media (min-width: 600px) {
     .container { max-width: 540px; padding: 32px 0; }
     .t3d { font-size: 56px; }
@@ -516,9 +511,9 @@
       <button type="button" class="type-btn" data-value="Férias">Férias</button>
     </div>
 
-    <label for="startDate">Dia para começar</label>
-    <input type="date" id="startDate" required>
-    <div class="date-display" id="dateDisplay" role="button" tabindex="0" aria-haspopup="dialog"></div>
+    <label id="dateLabel">Dia para começar</label>
+    <input type="hidden" id="startDate">
+    <div class="date-display" id="dateDisplay" role="button" tabindex="0" aria-haspopup="dialog" aria-labelledby="dateLabel dateDisplay"></div>
 
     <div class="preview" id="preview" hidden>
       <ol class="preview-days" id="previewDays"></ol>
@@ -556,7 +551,7 @@
 </div>
 
 <!-- Seletor de datas (computador) -->
-<div class="datepicker-overlay" id="datepickerOverlay">
+<div class="datepicker-overlay" id="datepickerOverlay" role="dialog" aria-modal="true" aria-label="Escolher o dia para começar">
   <div class="datepicker">
     <div class="datepicker-header">
       <button type="button" id="prevMonth">‹</button>
@@ -662,12 +657,19 @@ function renderCalendar() {
 dateDisplay.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); dateDisplay.click(); }
 });
-dateDisplay.addEventListener('click', () => {
+function openDatepicker() {
   viewDate = new Date(selectedDate);
   renderCalendar();
   overlay.classList.add('open');
+  setDimmed(true);
   dateTouched = true;
-});
+}
+function closeDatepicker() {
+  overlay.classList.remove('open');
+  setDimmed(false);
+  dateDisplay.focus({ preventScroll: true });
+}
+dateDisplay.addEventListener('click', openDatepicker);
 
 prevMonthBtn.addEventListener('click', () => {
   viewDate.setMonth(viewDate.getMonth() - 1);
@@ -678,26 +680,27 @@ nextMonthBtn.addEventListener('click', () => {
   renderCalendar();
 });
 
-cancelDateBtn.addEventListener('click', () => {
-  overlay.classList.remove('open');
-});
+cancelDateBtn.addEventListener('click', closeDatepicker);
 confirmDateBtn.addEventListener('click', () => {
   updateDisplay();
-  overlay.classList.remove('open');
   dateTouched = true;
+  closeDatepicker();
 });
 
 const helpOverlay = document.getElementById('helpOverlay');
 const themeColorMeta = document.getElementById('themeColor');
+// Janela aberta: o fundo fora da página (barras do iPhone) escurece como a sobreposição
+function setDimmed(on) {
+  document.documentElement.classList.toggle('help-open', on);
+  themeColorMeta.setAttribute('content', on ? '#a49481' : '#e3d0b8');
+}
 function openHelp() {
   helpOverlay.classList.add('open');
-  document.documentElement.classList.add('help-open');
-  themeColorMeta.setAttribute('content', '#a49481');
+  setDimmed(true);
 }
 function closeHelp() {
   helpOverlay.classList.remove('open');
-  document.documentElement.classList.remove('help-open');
-  themeColorMeta.setAttribute('content', '#e3d0b8');
+  setDimmed(false);
 }
 document.getElementById('helpLink').addEventListener('click', (e) => {
   e.preventDefault();
@@ -708,29 +711,15 @@ helpOverlay.addEventListener('click', (e) => {
   if (e.target === helpOverlay) closeHelp();
 });
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closeHelp();
+  if (e.key !== 'Escape') return;
+  if (overlay.classList.contains('open')) closeDatepicker();
+  else if (helpOverlay.classList.contains('open')) closeHelp();
 });
 
 overlay.addEventListener('click', (e) => {
-  if (e.target === overlay) {
-    overlay.classList.remove('open');
-  }
+  if (e.target === overlay) closeDatepicker();
 });
 
-startInput.addEventListener('focus', () => {
-  document.body.classList.add('blurred');
-  dateTouched = true;
-});
-startInput.addEventListener('blur', () => {
-  setTimeout(() => document.body.classList.remove('blurred'), 100);
-});
-startInput.addEventListener('change', () => {
-  dateTouched = true;
-  if (startInput.value) {
-    selectedDate = new Date(startInput.value + 'T00:00:00');
-    updateDisplay();
-  }
-});
 
 
 const cyclesSelect = document.getElementById('cycles');
