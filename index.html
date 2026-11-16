@@ -58,6 +58,57 @@
     border: 1px solid #8b5cf6;
     box-shadow: 0 14px 45px rgba(139, 92, 246, 0.45), 0 4px 14px rgba(0, 0, 0, 0.3);
   }
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 10px;
+  }
+  .card-top label { margin-bottom: 0; }
+  .help-link {
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    opacity: 0.9;
+  }
+  .help-link:hover { opacity: 1; }
+
+  .help-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 1001;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .help-overlay.open { display: flex; }
+  .help-box {
+    background: linear-gradient(135deg, #2c2c2e, #1c1c1e);
+    border: 1px solid #3a3a3c;
+    border-radius: 20px;
+    padding: 22px;
+    max-width: 420px;
+    width: 100%;
+    max-height: 85dvh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  .help-box h2 { font-size: 20px; margin-bottom: 12px; }
+  .help-box h3 { font-size: 15px; margin: 14px 0 4px; color: #e9d5ff; }
+  .help-box ul { padding-left: 18px; color: var(--text-secondary); }
+  .help-box p { color: var(--text-secondary); }
+  .help-box button {
+    width: 100%; margin-top: 18px; padding: 12px; border: none; border-radius: 12px;
+    background: var(--accent); color: #fff; font-size: 16px; font-weight: 600; cursor: pointer;
+  }
   label { display: block; font-size: 13px; font-weight: 600; color: #e9d5ff; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
   .buttons {
     display: grid;
@@ -265,7 +316,10 @@
     <h1>Eventos</h1>
   </header>
   <form id="eventForm" class="card">
-    <label>Tipo de evento</label>
+    <div class="card-top">
+      <label>Tipo de evento</label>
+      <a href="#ajuda" class="help-link" id="helpLink">Ajuda</a>
+    </div>
     <div class="buttons">
       <button type="button" class="type-btn" data-value="🌙" style="background:#2c2c2e !important; color:#f5f5f7 !important; -webkit-appearance:none;">🌙</button>
       <button type="button" class="type-btn" data-value="☀️" style="background:#2c2c2e !important; color:#f5f5f7 !important; -webkit-appearance:none;">☀️</button>
@@ -285,6 +339,29 @@
     <button type="button" class="open-cal-btn" id="openCalBtn">Abrir no Calendário</button>
     <div id="status" class="status"></div>
   </form>
+</div>
+
+<!-- Ajuda -->
+<div class="help-overlay" id="helpOverlay" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+  <div class="help-box">
+    <h2 id="helpTitle">Ajuda</h2>
+    <h3>Tipos de evento</h3>
+    <ul>
+      <li><b>🌙, ☀️ e Férias:</b> 4 dias ocupados e 2 livres, repetido 4 vezes por mês.</li>
+      <li><b>Folgas:</b> 2 dias com evento e 4 livres, repetido 4 vezes por mês.</li>
+    </ul>
+    <h3>Como usar</h3>
+    <ul>
+      <li>Escolhe o tipo de evento.</li>
+      <li>Escolhe o dia para começar (no Mac, clica na data e carrega em OK).</li>
+      <li>Escolhe quantos meses e carrega em <b>Adicionar Eventos</b>.</li>
+    </ul>
+    <h3>iPhone</h3>
+    <p>O Calendário abre sozinho. Confirma em “Adicionar tudo”.</p>
+    <h3>Mac</h3>
+    <p>É descarregado o ficheiro <b>eventos.ics</b>. Abre-o nas Transferências e o Calendário pergunta onde adicionar.</p>
+    <button type="button" id="helpClose">Fechar</button>
+  </div>
 </div>
 
 <!-- Custom Date Picker for Desktop -->
@@ -412,6 +489,19 @@ confirmDateBtn.addEventListener('click', () => {
   updateDisplay();
   overlay.classList.remove('open');
   dateTouched = true;
+});
+
+const helpOverlay = document.getElementById('helpOverlay');
+document.getElementById('helpLink').addEventListener('click', (e) => {
+  e.preventDefault();
+  helpOverlay.classList.add('open');
+});
+document.getElementById('helpClose').addEventListener('click', () => helpOverlay.classList.remove('open'));
+helpOverlay.addEventListener('click', (e) => {
+  if (e.target === helpOverlay) helpOverlay.classList.remove('open');
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') helpOverlay.classList.remove('open');
 });
 
 overlay.addEventListener('click', (e) => {
