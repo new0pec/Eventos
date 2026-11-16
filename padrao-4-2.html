@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Padrão 4 dias + 2 de pausa</title>
+<title>4 dias + 2 de pausa</title>
 <style>
   :root {
     --bg: #0f0f12;
@@ -31,14 +31,40 @@
   header h1 { font-size: 26px; font-weight: 700; margin-bottom: 6px; }
   header p { color: var(--text-secondary); font-size: 15px; }
   .card { background: var(--card); border-radius: var(--radius); padding: 20px; border: 1px solid var(--border); }
-  label { display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-  input, select {
+  label { display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .type-btn {
+    background: #2c2c2e;
+    border: 2px solid #3a3a3c;
+    border-radius: 16px;
+    padding: 20px 10px;
+    font-size: 28px;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--text);
+    text-align: center;
+  }
+  .type-btn.selected {
+    border-color: var(--accent);
+    background: rgba(10, 132, 255, 0.15);
+    box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.3);
+  }
+  .type-btn.small {
+    font-size: 17px;
+    font-weight: 600;
+    padding: 18px 10px;
+  }
+  input {
     width: 100%; background: #2c2c2e; border: 1px solid #3a3a3c; border-radius: 12px;
     padding: 14px 16px; font-size: 17px; color: var(--text); font-family: inherit;
     outline: none; margin-bottom: 16px; appearance: none; -webkit-appearance: none;
   }
-  select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23a1a1aa' d='M1.41 0L6 4.58 10.59 0 12 1.41l-6 6-6-6z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 16px center; padding-right: 40px; }
-  input:focus, select:focus { border-color: var(--accent); }
+  input:focus { border-color: var(--accent); }
   .row { display: flex; gap: 12px; }
   .row > div { flex: 1; }
   button.primary {
@@ -49,26 +75,28 @@
   .status { margin-top: 12px; padding: 12px; border-radius: 12px; font-size: 14px; text-align: center; display: none; }
   .status.success { display: block; background: rgba(48,209,88,0.15); color: var(--success); }
   .status.error { display: block; background: rgba(255,69,58,0.15); color: var(--danger); }
-  .preview { margin-top: 12px; font-size: 14px; color: var(--text-secondary); }
+  .preview { margin-top: 8px; font-size: 14px; color: var(--text-secondary); }
 </style>
 </head>
 <body>
 <div class="container">
   <header>
     <h1>4 dias + 2 de pausa</h1>
-    <p>Repete o padrão quantas vezes quiseres</p>
+    <p>Escolhe o tipo e repete o padrão</p>
   </header>
   <form id="eventForm" class="card">
-    <label for="title">Tipo de evento *</label>
-    <select id="title" required>
-      <option value="" disabled selected>Escolhe o tipo</option>
-      <option value="🌙">🌙</option>
-      <option value="☀️">☀️</option>
-      <option value="Folgas">Folgas</option>
-      <option value="Férias">Férias</option>
-    </select>
+    <label>Tipo de evento *</label>
+    <div class="buttons">
+      <button type="button" class="type-btn" data-value="🌙">🌙</button>
+      <button type="button" class="type-btn" data-value="☀️">☀️</button>
+      <button type="button" class="type-btn small" data-value="Folgas">Folgas</button>
+      <button type="button" class="type-btn small" data-value="Férias">Férias</button>
+    </div>
+    <input type="hidden" id="title" required>
+
     <label for="startDate">Dia para começar *</label>
     <input type="date" id="startDate" required>
+
     <div class="row">
       <div>
         <label for="workDays">Dias de trabalho</label>
@@ -79,33 +107,55 @@
         <input type="number" id="offDays" min="1" max="14" value="2">
       </div>
     </div>
+
     <label for="cycles">Quantas vezes repetir o padrão? *</label>
     <input type="number" id="cycles" min="1" max="50" value="5" required>
+
     <div class="preview" id="preview"></div>
     <button type="submit" class="primary">Adicionar Eventos</button>
     <div id="status" class="status"></div>
   </form>
   <div class="help">
     <strong>Como funciona:</strong><br>
-    Cria eventos nos dias de trabalho e deixa em branco os dias de pausa.<br>
-    Exemplo predefinido: 4 dias de evento → 2 dias sem nada → repete.
+    Ao escolheres 🌙 ou ☀️, o padrão fica automaticamente em 4 dias de evento + 2 de pausa.<br>
+    O título no calendário será o ícone escolhido.
   </div>
 </div>
 <script>
 const startInput = document.getElementById('startDate');
 startInput.value = new Date().toISOString().split('T')[0];
 
+const titleInput = document.getElementById('title');
 const workInput = document.getElementById('workDays');
 const offInput = document.getElementById('offDays');
 const cyclesInput = document.getElementById('cycles');
 const previewEl = document.getElementById('preview');
+const typeButtons = document.querySelectorAll('.type-btn');
+
+let selectedTitle = '';
+
+typeButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    typeButtons.forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedTitle = btn.dataset.value;
+    titleInput.value = selectedTitle;
+
+    if (selectedTitle === '🌙' || selectedTitle === '☀️') {
+      workInput.value = 4;
+      offInput.value = 2;
+    }
+    updatePreview();
+  });
+});
 
 function updatePreview() {
   const w = parseInt(workInput.value) || 4;
   const o = parseInt(offInput.value) || 2;
   const c = parseInt(cyclesInput.value) || 1;
   const total = w * c;
-  previewEl.textContent = `Vai criar ${total} eventos (${w} dias + ${o} de pausa × ${c} ciclos)`;
+  const titleText = selectedTitle || '—';
+  previewEl.textContent = `Vai criar ${total} eventos “${titleText}” (${w} dias + ${o} de pausa × ${c} ciclos)`;
 }
 [workInput, offInput, cyclesInput].forEach(el => el.addEventListener('input', updatePreview));
 updatePreview();
@@ -131,13 +181,13 @@ function showStatus(msg, type) {
 
 document.getElementById('eventForm').addEventListener('submit', function(e) {
   e.preventDefault();
-  const title = document.getElementById('title').value;
+  const title = titleInput.value;
   const dateVal = startInput.value;
   const workDays = parseInt(workInput.value) || 4;
   const offDays = parseInt(offInput.value) || 2;
   const cycles = parseInt(cyclesInput.value) || 1;
   if (!title || !dateVal || cycles < 1) {
-    showStatus('Preenche todos os campos.', 'error');
+    showStatus('Escolhe o tipo e a data.', 'error');
     return;
   }
 
@@ -188,7 +238,7 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
     a.click();
     document.body.removeChild(a);
     showFallbackLink(dataUri);
-    showStatus(`A criar ${eventCount} eventos…`, 'success');
+    showStatus(`A criar ${eventCount} eventos “${title}”…`, 'success');
   } else {
     const a = document.createElement('a');
     a.href = url;
