@@ -145,6 +145,7 @@
     -webkit-appearance: none !important;
     appearance: none !important;
   }
+  .type-btn.full-width { grid-column: 1 / -1; }
   .type-btn.selected {
     background: #6a6a6e !important;
     border-color: #ff453a !important;
@@ -374,8 +375,7 @@
       <a href="#ajuda" class="help-link" id="helpLink">Ajuda</a>
     </div>
     <div class="buttons">
-      <button type="button" class="type-btn" data-value="🌙" style="background:#2c2c2e !important; color:#f5f5f7 !important; -webkit-appearance:none;">🌙</button>
-      <button type="button" class="type-btn" data-value="☀️" style="background:#2c2c2e !important; color:#f5f5f7 !important; -webkit-appearance:none;">☀️</button>
+      <button type="button" class="type-btn full-width" data-value="🌙" style="background:#2c2c2e !important; color:#f5f5f7 !important; -webkit-appearance:none;">🌙</button>
       <button type="button" class="type-btn" data-value="Folgas" style="background:#2c2c2e !important; color:#f5f5f7 !important; -webkit-appearance:none;">Folgas</button>
       <button type="button" class="type-btn" data-value="Férias" style="background:#2c2c2e !important; color:#f5f5f7 !important; -webkit-appearance:none;">Férias</button>
     </div>
@@ -710,7 +710,8 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
   // 🌙, ☀️ e Férias: 4 dias ocupados + 2 livres, 4 vezes por mês
   let workDays = 4;
   let offDays = 2;
-  const groupsPerMonth = 4;
+  // 🌙: 6 blocos por mês (🌙, ☀️, 🌙, ☀️, 🌙, ☀️); restantes: 4 blocos
+  const groupsPerMonth = title === '🌙' ? 6 : 4;
   if (title === 'Folgas') {
     workDays = 2;
     offDays = 4;
