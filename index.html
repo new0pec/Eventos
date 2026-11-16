@@ -216,20 +216,6 @@
   .toast-text { color: var(--text-secondary); font-size: 14px; }
   .status.success { display: block; background: rgba(48,209,88,0.15); color: var(--success); }
   .status.error { display: block; background: rgba(255,69,58,0.15); color: var(--danger); }
-  .open-cal-btn {
-    display: none;
-    width: 100%;
-    background: #30d158;
-    color: white;
-    border: none;
-    border-radius: 14px;
-    padding: 14px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    margin-top: 12px;
-  }
-  .open-cal-btn.show { display: block; }
 
   /* Custom Date Picker - Desktop */
   .datepicker-overlay {
@@ -389,7 +375,6 @@
     <select id="cycles" required></select>
 
     <button type="submit" class="primary">Adicionar Eventos</button>
-    <button type="button" class="open-cal-btn" id="openCalBtn">Abrir no Calendário</button>
     <div id="status" class="status"></div>
   </form>
 </div>
@@ -444,7 +429,6 @@ const prevMonthBtn = document.getElementById('prevMonth');
 const nextMonthBtn = document.getElementById('nextMonth');
 const cancelDateBtn = document.getElementById('cancelDate');
 const confirmDateBtn = document.getElementById('confirmDate');
-const openCalBtn = document.getElementById('openCalBtn');
 
 let selectedDate = new Date();
 let viewDate = new Date();
@@ -686,12 +670,6 @@ function openCalendar(url) {
   document.body.removeChild(a);
 }
 
-openCalBtn.addEventListener('click', () => {
-  if (!currentIcsUrl) return;
-  if (isIOSDevice()) openCalendar(currentIcsUrl);
-  else downloadIcs(currentIcsUrl);
-});
-
 // iPad em modo desktop identifica-se como "Macintosh" — distingue pelo ecrã tátil
 function isIOSDevice() {
   return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
@@ -791,13 +769,9 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
   } else if (isMac) {
     // No Mac o browser não pode abrir o Calendário sozinho: descarrega o .ics
     downloadIcs(currentIcsUrl);
-    openCalBtn.textContent = 'Descarregar outra vez';
-    openCalBtn.classList.add('show');
     showToast('Ficheiro eventos.ics descarregado', resumo + ' — abre-o nas Transferências.');
   } else {
     downloadIcs(currentIcsUrl);
-    openCalBtn.textContent = 'Descarregar outra vez';
-    openCalBtn.classList.add('show');
     showToast('Ficheiro eventos.ics descarregado', resumo + ' — abre-o para adicionar ao calendário.');
   }
 });
