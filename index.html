@@ -296,7 +296,6 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
   const blob = new Blob([ics], { type: 'text/calendar' });
   const url = URL.createObjectURL(blob);
-  const dataUri = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(ics);
 
   if (isIOS) {
     const a = document.createElement('a');
@@ -306,9 +305,7 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    showFallbackLink(dataUri);
     showStatus(`A criar ${eventCount} eventos “${title}” (${months} mês${months > 1 ? 'es' : ''})…`, 'success');
-    // Popup de confirmação
     setTimeout(() => {
       alert('Eventos adicionados com sucesso!');
     }, 500);
@@ -324,18 +321,6 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
   }
   setTimeout(() => URL.revokeObjectURL(url), 15000);
 });
-
-function showFallbackLink(href) {
-  let c = document.getElementById('fallbackLink');
-  if (!c) {
-    c = document.createElement('div');
-    c.id = 'fallbackLink';
-    c.style.marginTop = '12px';
-    c.style.textAlign = 'center';
-    document.getElementById('status').after(c);
-  }
-  c.innerHTML = `<a href="${href}" style="color:#0a84ff;font-weight:600;text-decoration:underline;">Abrir no Calendário</a>`;
-}
 </script>
 </body>
 </html>
