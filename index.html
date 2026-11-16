@@ -86,6 +86,8 @@
     align-items: center;
     justify-content: center;
     padding: 16px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
   .help-overlay.open { display: flex; }
   .help-box {
@@ -95,8 +97,13 @@
     padding: 22px;
     max-width: 420px;
     width: 100%;
+    max-height: 85vh;
     max-height: 85dvh;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+    margin: auto;
     box-shadow: 0 20px 60px rgba(0,0,0,0.5);
     font-size: 15px;
     line-height: 1.5;
@@ -353,6 +360,7 @@
     <p>O botão Folga adiciona 2 dias de Folga. Depois de escolher o dia pretendido, será adicionada uma folga nesse dia e no dia depois desse.</p>
     <p>O botão Férias adiciona 4 dias de Férias e deixa 2 dias em branco (será para a folga)</p>
     <p>Todos os botões vão repetir o processo 4 vezes (1 Mês)</p>
+    <p>O botão “Quantos Meses” serve para repetir esse evento vários meses caso assim queiras.</p>
     <button type="button" id="helpClose">Fechar</button>
   </div>
 </div>
