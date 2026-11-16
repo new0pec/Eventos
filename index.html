@@ -6,16 +6,30 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#e3d0b8" id="themeColor">
-<meta name="color-scheme" content="dark">
+<meta name="color-scheme" content="light">
 <title>Eventos</title>
 <style>
   :root {
-    --text: #f5f5f7;
-    --text-secondary: #a1a1aa;
-    --accent: #0a84ff;
-    --success: #30d158;
-    --danger: #ff453a;
-    --radius: 16px;
+    /* Texto (castanho escuro sobre vidro claro) */
+    --text: #2e241c;
+    --text-secondary: #5a4838;
+    --text-muted: #5e4d40;
+    /* Cor de destaque */
+    --accent: #B95A60;          /* botão Adicionar Eventos */
+    --accent-strong: #A84E55;   /* destaque em texto pequeno (mais contraste) */
+    --danger: #9b1c1c;
+    --success: #1f7a36;
+    /* Vidro */
+    --glass: rgba(255, 255, 255, 0.38);
+    --glass-strong: rgba(255, 255, 255, 0.62);
+    --glass-panel: rgba(255, 255, 255, 0.74);   /* janelas sobre a página */
+    --glass-control: rgba(255, 255, 255, 0.5);
+    --glass-border: rgba(255, 255, 255, 0.7);
+    --glass-shadow: 0 10px 40px rgba(74, 59, 46, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    --blur: blur(22px) saturate(160%);
+    /* Sobreposição das janelas */
+    --scrim: rgba(46, 36, 28, 0.35);
+    --radius: 22px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html {
@@ -33,9 +47,9 @@
     background: url("fundo.jpg") center / cover no-repeat;
     z-index: -1;
   }
-  /* Com a Ajuda aberta, o fundo fora da página (barras do iPhone) escurece como a sobreposição */
+  /* Com uma janela aberta, o fundo fora da página (barras do iPhone) acompanha a sobreposição */
   html.help-open {
-    background: #5b534a;
+    background: #a49481;
   }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
@@ -52,7 +66,7 @@
     justify-content: center;
   }
   body.blurred {
-    filter: blur(8px) brightness(0.65);
+    filter: blur(8px) brightness(0.85);
   }
   .container {
     max-width: 480px;
@@ -60,14 +74,31 @@
     padding: 24px 0;
     width: 100%;
   }
-  header { text-align: center; margin-bottom: 28px; }
-  header h1 { font-size: 28px; font-weight: 700; margin-bottom: 6px; color: #4a3b2e; }
+  header { text-align: center; margin-bottom: 24px; }
+  header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.3px;
+    text-shadow: 0 1px 12px rgba(255, 255, 255, 0.7);
+  }
+
+  /* Superfícies de vidro */
+  .glass {
+    background: var(--glass);
+    backdrop-filter: var(--blur);
+    -webkit-backdrop-filter: var(--blur);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+  /* Sem desfoque disponível: vidro mais opaco para manter a leitura */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .glass, .toast, .help-box, .datepicker { background: rgba(255, 255, 255, 0.85) !important; }
+  }
+
   .card {
-    background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 50%, #4c1d95 100%);
     border-radius: var(--radius);
     padding: 20px;
-    border: 1px solid #8b5cf6;
-    box-shadow: 0 14px 45px rgba(139, 92, 246, 0.45), 0 4px 14px rgba(0, 0, 0, 0.3);
   }
   .card-top {
     display: flex;
@@ -79,57 +110,21 @@
   .help-link {
     font-size: 14px;
     font-weight: 600;
-    color: #fff;
+    color: var(--text);
     text-decoration: underline;
     text-underline-offset: 3px;
-    opacity: 0.9;
   }
-  .help-link:hover { opacity: 1; }
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
 
-  .help-overlay {
-    display: none;
-    position: fixed;
-    top: calc(-1 * env(safe-area-inset-top, 0px));
-    bottom: calc(-1 * env(safe-area-inset-bottom, 0px));
-    left: 0;
-    right: 0;
-    background: rgba(0,0,0,0.6);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    z-index: 1001;
-    align-items: center;
-    justify-content: center;
-    padding: calc(16px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px));
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-  .help-overlay.open { display: flex; }
-  .help-box {
-    background: linear-gradient(135deg, #2c2c2e, #1c1c1e);
-    border: 1px solid #3a3a3c;
-    border-radius: 20px;
-    padding: 22px;
-    max-width: 420px;
-    width: 100%;
-    max-height: 85vh;
-    max-height: 85dvh;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
-    touch-action: pan-y;
-    margin: auto;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-    font-size: 15px;
-    line-height: 1.5;
-  }
-  .help-box h2 { font-size: 20px; margin-bottom: 12px; }
-  .help-box p + p { margin-top: 12px; }
-  .help-box p { color: var(--text-secondary); }
-  .help-box button {
-    width: 100%; margin-top: 18px; padding: 12px; border: none; border-radius: 12px;
-    background: var(--accent); color: #fff; font-size: 16px; font-weight: 600; cursor: pointer;
-  }
-  label { display: block; font-size: 13px; font-weight: 600; color: #e9d5ff; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+  /* Tipos de evento */
   .buttons {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -137,50 +132,74 @@
     margin-bottom: 20px;
   }
   .type-btn {
-    background: #2c2c2e !important;
-    border: 2px solid #3a3a3c !important;
-    border-radius: 16px !important;
+    background: var(--glass-control);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
     padding: 18px 10px;
     font-size: 17px;
     font-weight: 600;
+    font-family: inherit;
+    color: var(--text);
     cursor: pointer;
-    transition: all 0.15s;
-    color: #f5f5f7 !important;
     text-align: center;
-    -webkit-appearance: none !important;
-    appearance: none !important;
+    -webkit-appearance: none;
+    appearance: none;
+    transition: background 0.15s, box-shadow 0.15s, border-color 0.15s;
   }
+  .type-btn:hover { background: rgba(255, 255, 255, 0.62); }
   .type-btn.full-width { grid-column: 1 / -1; }
   .type-btn.selected {
-    background: #6a6a6e !important;
-    border-color: #ff453a !important;
-    box-shadow: 0 0 0 3px rgba(255, 69, 58, 0.4) !important;
+    background: rgba(255, 255, 255, 0.82);
+    border: 2px solid var(--accent-strong);
+    box-shadow: 0 0 0 3px rgba(168, 78, 85, 0.25);
   }
+
+  /* Campos */
   input, select, .date-display {
-    width: 100%; background: #2c2c2e; border: 1px solid #3a3a3c; border-radius: 12px;
-    padding: 14px 16px; font-size: 17px; color: var(--text); font-family: inherit;
-    outline: none; margin-bottom: 16px; appearance: none; -webkit-appearance: none;
+    width: 100%;
+    background: var(--glass-control);
+    border: 1px solid var(--glass-border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    font-size: 17px;
+    color: var(--text);
+    font-family: inherit;
+    outline: none;
+    margin-bottom: 16px;
+    appearance: none;
+    -webkit-appearance: none;
   }
+  input:focus, select:focus, .date-display:hover { border-color: var(--accent-strong); }
   .date-display {
     text-align: center;
     cursor: pointer;
     user-select: none;
   }
-  .date-display:hover {
-    border-color: var(--accent);
-  }
   select {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23a1a1aa' d='M1.41 0L6 4.58 10.59 0 12 1.41l-6 6-6-6z'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%235a4838' d='M1.41 0L6 4.58 10.59 0 12 1.41l-6 6-6-6z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 16px center;
     padding-right: 40px;
   }
-  input:focus, select:focus { border-color: var(--accent); }
+
   button.primary {
-    width: 100%; background: #B95A60; color: #FFFFFF; border: none; border-radius: 14px;
-    padding: 16px; font-size: 17px; font-weight: 600; cursor: pointer; margin-top: 8px;
+    width: 100%;
+    background: #B95A60;
+    color: #FFFFFF;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 16px;
+    padding: 16px;
+    font-size: 19px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    margin-top: 8px;
+    box-shadow: 0 8px 24px rgba(185, 90, 96, 0.35);
   }
-  .status { margin-top: 12px; padding: 12px; border-radius: 12px; font-size: 14px; text-align: center; display: none; }
+
+  .status { margin-top: 12px; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 600; text-align: center; display: none; }
+  .status.error { display: block; background: rgba(255, 255, 255, 0.7); color: var(--danger); border: 1px solid rgba(155, 28, 28, 0.25); }
+
   /* Notificação no topo do ecrã */
   .toast {
     position: fixed;
@@ -193,12 +212,12 @@
     align-items: center;
     gap: 12px;
     padding: 14px 16px;
-    background: rgba(44, 44, 46, 0.92);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid #3a3a3c;
+    background: var(--glass-strong);
+    backdrop-filter: var(--blur);
+    -webkit-backdrop-filter: var(--blur);
+    border: 1px solid var(--glass-border);
     border-radius: 18px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    box-shadow: var(--glass-shadow);
     color: var(--text);
     font-size: 15px;
     line-height: 1.35;
@@ -219,29 +238,78 @@
   }
   .toast-title { font-weight: 600; }
   .toast-text { color: var(--text-secondary); font-size: 14px; }
-  .status.error { display: block; background: rgba(255,69,58,0.15); color: var(--danger); }
+
+  /* Janela de Ajuda */
+  .help-overlay {
+    display: none;
+    position: fixed;
+    top: calc(-1 * env(safe-area-inset-top, 0px));
+    bottom: calc(-1 * env(safe-area-inset-bottom, 0px));
+    left: 0;
+    right: 0;
+    background: var(--scrim);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 1001;
+    align-items: center;
+    justify-content: center;
+    padding: calc(16px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px));
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .help-overlay.open { display: flex; }
+  .help-box {
+    background: var(--glass-panel);
+    backdrop-filter: var(--blur);
+    -webkit-backdrop-filter: var(--blur);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    border-radius: var(--radius);
+    padding: 22px;
+    max-width: 420px;
+    width: 100%;
+    max-height: 85vh;
+    max-height: 85dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+    margin: auto;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  .help-box h2 { font-size: 20px; margin-bottom: 12px; color: var(--text); }
+  .help-box p { color: var(--text); }
+  .help-box p + p { margin-top: 12px; }
+  .help-box button {
+    width: 100%; margin-top: 18px; padding: 12px; border: none; border-radius: 14px;
+    background: var(--accent-strong); color: #fff; font-size: 16px; font-weight: 600;
+    font-family: inherit; cursor: pointer;
+  }
 
   /* Seletor de datas (computador) */
   .datepicker-overlay {
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.6);
-    backdrop-filter: blur(4px);
+    background: var(--scrim);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     z-index: 1000;
     align-items: center;
     justify-content: center;
   }
-  .datepicker-overlay.open {
-    display: flex;
-  }
+  .datepicker-overlay.open { display: flex; }
   .datepicker {
-    background: linear-gradient(135deg, #2c2c2e, #1c1c1e);
-    border-radius: 20px;
+    background: var(--glass-panel);
+    backdrop-filter: var(--blur);
+    -webkit-backdrop-filter: var(--blur);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    border-radius: var(--radius);
     padding: 20px;
     width: 340px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-    border: 1px solid #3a3a3c;
+    color: var(--text);
   }
   .datepicker-header {
     display: flex;
@@ -250,22 +318,17 @@
     margin-bottom: 16px;
   }
   .datepicker-header button {
-    background: #3a3a3c;
-    border: none;
-    color: white;
+    background: var(--glass-control);
+    border: 1px solid var(--glass-border);
+    color: var(--text);
     width: 36px;
     height: 36px;
     border-radius: 10px;
     cursor: pointer;
     font-size: 18px;
   }
-  .datepicker-header button:hover {
-    background: #4a4a4c;
-  }
-  .datepicker-month {
-    font-size: 18px;
-    font-weight: 600;
-  }
+  .datepicker-header button:hover { background: rgba(255, 255, 255, 0.8); }
+  .datepicker-month { font-size: 18px; font-weight: 600; }
   .datepicker-weekdays {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
@@ -273,7 +336,7 @@
     margin-bottom: 8px;
     text-align: center;
     font-size: 12px;
-    color: #a1a1aa;
+    color: var(--text-secondary);
     font-weight: 600;
   }
   .datepicker-days {
@@ -292,20 +355,10 @@
     font-size: 15px;
     transition: background 0.15s;
   }
-  .datepicker-day:hover {
-    background: #3a3a3c;
-  }
-  .datepicker-day.other-month {
-    color: #555;
-  }
-  .datepicker-day.selected {
-    background: #0a84ff;
-    color: white;
-    font-weight: 600;
-  }
-  .datepicker-day.today {
-    border: 2px solid #0a84ff;
-  }
+  .datepicker-day:hover { background: rgba(255, 255, 255, 0.7); }
+  .datepicker-day.other-month { color: var(--text-muted); cursor: default; }
+  .datepicker-day.selected { background: var(--accent-strong); color: #fff; font-weight: 600; }
+  .datepicker-day.today { border: 2px solid var(--accent-strong); }
   .datepicker-actions {
     display: flex;
     gap: 10px;
@@ -314,19 +367,21 @@
   .datepicker-actions button {
     flex: 1;
     padding: 12px;
-    border: none;
     border-radius: 12px;
     font-size: 15px;
     font-weight: 600;
+    font-family: inherit;
     cursor: pointer;
   }
   .datepicker-actions .cancel {
-    background: #3a3a3c;
-    color: white;
+    background: var(--glass-control);
+    border: 1px solid var(--glass-border);
+    color: var(--text);
   }
   .datepicker-actions .ok {
-    background: #0a84ff;
-    color: white;
+    background: var(--accent-strong);
+    border: none;
+    color: #fff;
   }
 
   @media (max-width: 768px) {
@@ -336,7 +391,6 @@
   @media (min-width: 769px) {
     #startDate { display: none; }
   }
-
   @media (min-width: 600px) {
     .container { max-width: 540px; padding: 32px 0; }
     header h1 { font-size: 32px; }
@@ -359,7 +413,7 @@
   <header>
     <h1>Eventos</h1>
   </header>
-  <form id="eventForm" class="card">
+  <form id="eventForm" class="card glass">
     <div class="card-top">
       <label>Tipo de evento</label>
       <a href="#ajuda" class="help-link" id="helpLink">Ajuda</a>
@@ -536,7 +590,7 @@ const themeColorMeta = document.getElementById('themeColor');
 function openHelp() {
   helpOverlay.classList.add('open');
   document.documentElement.classList.add('help-open');
-  themeColorMeta.setAttribute('content', '#5b534a');
+  themeColorMeta.setAttribute('content', '#a49481');
 }
 function closeHelp() {
   helpOverlay.classList.remove('open');
