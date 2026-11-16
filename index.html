@@ -135,14 +135,20 @@
 const startInput = document.getElementById('startDate');
 startInput.value = new Date().toISOString().split('T')[0];
 
+let dateTouched = false;
+
 // Blur stays until the date picker is fully closed (OK pressed)
 startInput.addEventListener('focus', () => {
   document.body.classList.add('blurred');
+  dateTouched = true;
 });
 startInput.addEventListener('blur', () => {
   setTimeout(() => {
     document.body.classList.remove('blurred');
   }, 100);
+});
+startInput.addEventListener('change', () => {
+  dateTouched = true;
 });
 
 const titleInput = document.getElementById('title');
@@ -191,8 +197,8 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
     showStatus('Escolhe um tipo de evento.', 'error');
     return;
   }
-  if (!dateVal) {
-    showStatus('Escolhe a data.', 'error');
+  if (!dateTouched || !dateVal) {
+    showStatus('Escolhe o dia para começar.', 'error');
     return;
   }
   if (cycles < 1) {
