@@ -29,7 +29,7 @@
     --blur: blur(22px) saturate(160%);
     /* Sobreposição das janelas */
     --scrim: rgba(46, 36, 28, 0.35);
-    --radius: 22px;
+    --radius: 28px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html {
@@ -116,12 +116,10 @@
   }
   label {
     display: block;
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 600;
     color: var(--text-secondary);
-    margin-bottom: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    margin-bottom: 8px;
   }
 
   /* Tipos de evento */
@@ -134,7 +132,7 @@
   .type-btn {
     background: var(--glass-control);
     border: 1px solid var(--glass-border);
-    border-radius: 16px;
+    border-radius: 18px;
     padding: 18px 10px;
     font-size: 17px;
     font-weight: 600;
@@ -149,9 +147,9 @@
   .type-btn:hover { background: rgba(255, 255, 255, 0.62); }
   .type-btn.full-width { grid-column: 1 / -1; }
   .type-btn.selected {
-    background: rgba(255, 255, 255, 0.82);
+    background: rgba(255, 255, 255, 0.85);
     border: 2px solid var(--accent-strong);
-    box-shadow: 0 0 0 3px rgba(168, 78, 85, 0.25);
+    padding: 17px 9px; /* compensa o contorno de 2px para o texto não saltar */
   }
 
   /* Campos */
@@ -187,7 +185,7 @@
     background: #B95A60;
     color: #FFFFFF;
     border: 1px solid rgba(255, 255, 255, 0.35);
-    border-radius: 16px;
+    border-radius: 18px;
     padding: 16px;
     font-size: 19px;
     font-weight: 700;
@@ -195,6 +193,47 @@
     cursor: pointer;
     margin-top: 8px;
     box-shadow: 0 8px 24px rgba(185, 90, 96, 0.35);
+  }
+
+  /* Pré-visualização: os primeiros 12 dias tal como vão ficar no Calendário */
+  .preview { margin: -4px 0 18px; }
+  .preview[hidden] { display: none; }
+  .preview-days {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 4px;
+  }
+  .pd {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    padding: 5px 0 4px;
+    border-radius: 8px;
+    border: 1px dashed rgba(90, 72, 56, 0.35);
+    color: var(--text-secondary);
+    min-width: 0;
+  }
+  .pd.on {
+    border: 1px solid rgba(168, 78, 85, 0.45);
+    background: rgba(255, 255, 255, 0.78);
+    color: var(--text);
+  }
+  .pd-wd { font-size: 11px; font-weight: 600; line-height: 1.2; }
+  .pd-n { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.2; }
+  .pd-mark { font-size: 12px; line-height: 1.3; height: 16px; }
+  .pd.on .pd-mark:empty::before { content: "●"; color: var(--accent-strong); font-size: 9px; }
+  .preview-caption { margin-top: 6px; font-size: 13px; color: var(--text-secondary); }
+
+  /* Foco visível no teclado */
+  .type-btn:focus-visible, button:focus-visible, a:focus-visible,
+  input:focus-visible, select:focus-visible, .date-display:focus-visible, .datepicker-day:focus-visible {
+    outline: 3px solid var(--accent-strong);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; }
   }
 
   .status { margin-top: 12px; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 600; text-align: center; display: none; }
@@ -396,6 +435,7 @@
     header h1 { font-size: 32px; }
     .card { padding: 28px; }
     .type-btn { padding: 20px 12px; font-size: 18px; }
+    .type-btn.selected { padding: 19px 11px; }
   }
   @media (min-width: 900px) {
     .container { max-width: 600px; }
@@ -403,6 +443,8 @@
   }
   @media (max-width: 380px) {
     .type-btn { padding: 14px 8px; font-size: 16px; }
+    .type-btn.selected { padding: 13px 7px; }
+    .pd-n { font-size: 13px; }
     .card { padding: 16px; }
     header h1 { font-size: 24px; }
   }
@@ -426,7 +468,12 @@
 
     <label for="startDate">Dia para começar</label>
     <input type="date" id="startDate" required>
-    <div class="date-display" id="dateDisplay">Selecionar data</div>
+    <div class="date-display" id="dateDisplay" role="button" tabindex="0" aria-haspopup="dialog"></div>
+
+    <div class="preview" id="preview" hidden>
+      <ol class="preview-days" id="previewDays"></ol>
+      <p class="preview-caption" id="previewCaption">Os primeiros 12 dias no Calendário</p>
+    </div>
 
     <label for="cycles">Quantos meses?</label>
     <select id="cycles" required></select>
@@ -491,6 +538,7 @@ const confirmDateBtn = document.getElementById('confirmDate');
 let selectedDate = new Date();
 let viewDate = new Date();
 let dateTouched = false;
+let selectedTitle = '';
 let currentIcsUrl = null;
 
 function formatDate(d) {
@@ -507,6 +555,7 @@ function toInputValue(d) {
 function updateDisplay() {
   dateDisplay.textContent = formatDate(selectedDate);
   startInput.value = toInputValue(selectedDate);
+  renderPreview();
 }
 
 function renderCalendar() {
@@ -560,6 +609,9 @@ function renderCalendar() {
   }
 }
 
+dateDisplay.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); dateDisplay.click(); }
+});
 dateDisplay.addEventListener('click', () => {
   viewDate = new Date(selectedDate);
   renderCalendar();
@@ -630,12 +682,10 @@ startInput.addEventListener('change', () => {
   }
 });
 
-updateDisplay();
 
 const cyclesSelect = document.getElementById('cycles');
 const typeButtons = document.querySelectorAll('.type-btn');
 
-let selectedTitle = '';
 
 cyclesSelect.innerHTML = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
   .map(v => `<option value="${v}">${v}</option>`).join('');
@@ -646,6 +696,7 @@ typeButtons.forEach(btn => {
     typeButtons.forEach(b => b.classList.remove('selected'));
     btn.classList.add('selected');
     selectedTitle = btn.dataset.value;
+    renderPreview();
   });
 });
 
@@ -657,6 +708,56 @@ function toICSDate(date) {
 function toICSStamp(date) {
   return date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
 }
+// Nome do tipo como o utilizador o vê
+const TYPE_NAMES = { '🌙': 'Trabalho', 'Folgas': 'Folga', 'Férias': 'Férias' };
+
+// Lista de dias com evento: [{ date, summary }]
+// Trabalho (🌙): 6 blocos de 4 dias + 2 livres por mês, alternando 🌙 / ☀️
+// Férias: 4 blocos de 4 dias + 2 livres por mês
+// Folgas: 4 blocos de 2 dias + 4 livres por mês
+function buildSchedule(title, start, months) {
+  const workDays = title === 'Folgas' ? 2 : 4;
+  const offDays = title === 'Folgas' ? 4 : 2;
+  const groupsPerMonth = title === '🌙' ? 6 : 4;
+  const days = [];
+  const current = new Date(start);
+  for (let c = 0; c < groupsPerMonth * months; c++) {
+    const summary = (title === '🌙' && c % 2 === 1) ? '☀️' : title;
+    for (let d = 0; d < workDays; d++) {
+      days.push({ date: new Date(current), summary });
+      current.setDate(current.getDate() + 1);
+    }
+    current.setDate(current.getDate() + offDays);
+  }
+  return days;
+}
+
+const previewEl = document.getElementById('preview');
+const previewDays = document.getElementById('previewDays');
+const WEEKDAY_INITIALS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+const PREVIEW_LENGTH = 12;
+function renderPreview() {
+  if (!selectedTitle) { previewEl.hidden = true; return; }
+  const start = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+  const byDay = new Map(buildSchedule(selectedTitle, start, 1).map(e => [e.date.toDateString(), e.summary]));
+  previewDays.innerHTML = '';
+  for (let i = 0; i < PREVIEW_LENGTH; i++) {
+    const d = new Date(start);
+    d.setDate(d.getDate() + i);
+    const summary = byDay.get(d.toDateString());
+    const li = document.createElement('li');
+    li.className = 'pd' + (summary ? ' on' : '');
+    const dayLabel = d.toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' });
+    li.setAttribute('aria-label', dayLabel + ': ' + (summary ? (summary === '☀️' ? 'Tarde' : summary === '🌙' ? 'Madrugada' : TYPE_NAMES[summary]) : 'livre'));
+    const mark = summary === '🌙' || summary === '☀️' ? summary : '';
+    li.innerHTML = `<span class="pd-wd" aria-hidden="true">${WEEKDAY_INITIALS[d.getDay()]}</span>` +
+      `<span class="pd-n" aria-hidden="true">${d.getDate()}</span>` +
+      `<span class="pd-mark" aria-hidden="true">${mark}</span>`;
+    previewDays.appendChild(li);
+  }
+  previewEl.hidden = false;
+}
+
 function generateUID() { return Date.now() + '-' + Math.random().toString(36).slice(2) + '@evento'; }
 function escapeICS(str) { return String(str).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n'); }
 const statusEl = document.getElementById('status');
@@ -724,13 +825,6 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
   const dateVal = startInput.value;
   const months = parseInt(cyclesSelect.value) || 1;
 
-  // Trabalho (🌙): 6 blocos de 4 dias + 2 livres por mês, alternando 🌙 / ☀️
-  // Férias: 4 blocos de 4 dias + 2 livres por mês
-  // Folgas: 4 blocos de 2 dias + 4 livres por mês
-  const workDays = title === 'Folgas' ? 2 : 4;
-  const offDays = title === 'Folgas' ? 4 : 2;
-  const groupsPerMonth = title === '🌙' ? 6 : 4;
-
   if (!title) {
     showError('Escolhe um tipo de evento.');
     return;
@@ -740,9 +834,8 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
     return;
   }
 
-  const totalGroups = groupsPerMonth * months;
   const [year, month, day] = dateVal.split('-').map(Number);
-  let current = new Date(year, month - 1, day);
+  const schedule = buildSchedule(title, new Date(year, month - 1, day), months);
   const now = new Date();
   const lines = [
     'BEGIN:VCALENDAR',
@@ -766,17 +859,10 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
     eventCount++;
   }
 
-  const blockTitle = (c) => (title === '🌙' && c % 2 === 1) ? '☀️' : title;
-
-  for (let c = 0; c < totalGroups; c++) {
-    const summary = blockTitle(c);
-    for (let d = 0; d < workDays; d++) {
-      const end = new Date(current);
-      end.setDate(end.getDate() + 1);
-      pushEvent(current, end, summary);
-      current.setDate(current.getDate() + 1);
-    }
-    current.setDate(current.getDate() + offDays);
+  for (const { date, summary } of schedule) {
+    const end = new Date(date);
+    end.setDate(end.getDate() + 1);
+    pushEvent(date, end, summary);
   }
   lines.push('END:VCALENDAR');
 
@@ -791,7 +877,7 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
 
   // Limpa mensagens de erro anteriores
   statusEl.className = 'status';
-  const resumo = `${eventCount} evento${eventCount > 1 ? 's' : ''} “${title === "🌙" ? "Trabalho" : title}” · ${months} ${months > 1 ? 'meses' : 'mês'}`;
+  const resumo = `${eventCount} evento${eventCount > 1 ? 's' : ''} de ${TYPE_NAMES[title]} em ${months} ${months > 1 ? 'meses' : 'mês'}.`;
 
   if (isIOSDevice()) {
     // No iPhone/iPad o Calendário abre sozinho
@@ -800,9 +886,12 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
   } else {
     // No computador o browser não abre o Calendário sozinho: descarrega o .ics
     downloadIcs(currentIcsUrl);
-    showToast('Ficheiro eventos.ics descarregado', resumo + ' — abre-o nas Transferências.');
+    showToast('eventos.ics descarregado', resumo + ' Abre o ficheiro nas Transferências para os adicionar ao Calendário.');
   }
 });
+
+// Estado inicial
+updateDisplay();
 </script>
 </body>
 </html>
