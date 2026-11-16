@@ -712,7 +712,7 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
     // Não confirmamos sucesso: o utilizador ainda tem de aceitar no Calendário
     const periodo = `${months} ${months > 1 ? 'meses' : 'mês'}`;
     showStatus(`${eventCount} evento${eventCount > 1 ? 's' : ''} “${title}” (${periodo}) prontos — confirma “Adicionar tudo” no Calendário.`, 'success');
-    openCalBtn.classList.add('show');
+    // No iPhone/iPad o Calendário abre sozinho: não mostra o botão
   } else if (isMac) {
     // No Mac o browser não pode abrir o Calendário sozinho: descarrega o .ics
     // e o utilizador abre-o (clique na transferência) → Calendário importa
