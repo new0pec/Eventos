@@ -308,6 +308,10 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
     document.body.removeChild(a);
     showFallbackLink(dataUri);
     showStatus(`A criar ${eventCount} eventos “${title}” (${months} mês${months > 1 ? 'es' : ''})…`, 'success');
+    // Popup de confirmação
+    setTimeout(() => {
+      alert('Eventos adicionados com sucesso!');
+    }, 500);
   } else {
     const a = document.createElement('a');
     a.href = url;
@@ -316,6 +320,7 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
     a.click();
     document.body.removeChild(a);
     showStatus('Ficheiro .ics descarregado.', 'success');
+    alert('Eventos adicionados com sucesso!');
   }
   setTimeout(() => URL.revokeObjectURL(url), 15000);
 });
