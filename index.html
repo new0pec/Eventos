@@ -144,7 +144,7 @@
     <label for="startDate">Dia para começar</label>
     <input type="date" id="startDate" required>
 
-    <label for="cycles">Vais adicionar quantas vezes?</label>
+    <label for="cycles">Quantos meses?</label>
     <select id="cycles" required>
       <option value="1" selected>1</option>
       <option value="2">2</option>
@@ -157,10 +157,6 @@
       <option value="9">9</option>
       <option value="10">10</option>
       <option value="12">12</option>
-      <option value="15">15</option>
-      <option value="20">20</option>
-      <option value="30">30</option>
-      <option value="50">50</option>
     </select>
 
     <button type="submit" class="primary">Adicionar Eventos</button>
@@ -236,17 +232,17 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
   e.preventDefault();
   const title = titleInput.value;
   const dateVal = startInput.value;
-  const times = parseInt(cyclesSelect.value) || 1;
+  const months = parseInt(cyclesSelect.value) || 1;
 
-  // Lua, Sol, Férias: 4 grupos de (4 dias + 2 em branco) por cada "vez"
-  // Folgas: 2 dias + 4 em branco por cada "vez"
+  // 1 mês = 4 grupos da sequência
+  // Lua, Sol, Férias: 4 dias + 2 em branco (x4 por mês)
+  // Folgas: 2 dias + 4 em branco (x4 por mês)
   let workDays = 4;
   let offDays = 2;
-  let groupsPerTime = 4;
+  const groupsPerMonth = 4;
   if (title === 'Folgas') {
     workDays = 2;
     offDays = 4;
-    groupsPerTime = 1;
   }
 
   if (!title) {
@@ -257,12 +253,12 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
     showStatus('Escolhe o dia para começar.', 'error');
     return;
   }
-  if (times < 1) {
-    showStatus('Escolhe quantas vezes.', 'error');
+  if (months < 1) {
+    showStatus('Escolhe quantos meses.', 'error');
     return;
   }
 
-  const totalGroups = groupsPerTime * times;
+  const totalGroups = groupsPerMonth * months;
 
   const [year, month, day] = dateVal.split('-').map(Number);
   let current = new Date(year, month - 1, day);
@@ -311,7 +307,7 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
     a.click();
     document.body.removeChild(a);
     showFallbackLink(dataUri);
-    showStatus(`A criar ${eventCount} eventos “${title}”…`, 'success');
+    showStatus(`A criar ${eventCount} eventos “${title}” (${months} mês${months > 1 ? 'es' : ''})…`, 'success');
   } else {
     const a = document.createElement('a');
     a.href = url;
