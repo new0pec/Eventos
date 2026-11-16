@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#e3d0b8" id="themeColor">
+<meta name="theme-color" content="#dbc3aa" id="themeColor">
 <meta name="color-scheme" content="light">
 <title>Eventos</title>
 <meta name="apple-mobile-web-app-title" content="Eventos">
@@ -17,7 +17,7 @@
   :root {
     /* Texto (castanho escuro sobre vidro claro) */
     --text: #2e241c;
-    --text-secondary: #5a4838;
+    --text-secondary: #4d3d30;
     --text-muted: #5e4d40;
     /* Cor de destaque */
     --accent: #B95A60;          /* botão Adicionar Eventos */
@@ -39,7 +39,7 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html {
     min-height: 100%;
-    background: #e3d0b8;
+    background: #dbc3aa;
   }
   /* Imagem de fundo fixa, a cobrir também as zonas do notch e da barra inferior */
   html::before {
@@ -49,12 +49,12 @@
     bottom: calc(-1 * env(safe-area-inset-bottom, 0px));
     left: 0;
     right: 0;
-    background: url("fundo.jpg") center / cover no-repeat;
+    background: url("fundo-outono.jpg") center / cover no-repeat;
     z-index: -1;
   }
   /* Com uma janela aberta, o fundo fora da página (barras do iPhone) acompanha a sobreposição */
   html.help-open {
-    background: #a49481;
+    background: #9e8b78;
   }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
@@ -106,7 +106,7 @@
     display: block;
     color: var(--text);
     background:
-      radial-gradient(circle at var(--lx) var(--ly), #8a6a52 0%, rgba(138,106,82,0) 45%),
+      radial-gradient(circle at var(--lx) var(--ly), #76583f 0%, rgba(118,88,63,0) 45%),
       linear-gradient(180deg, #3b2e23 0%, #2e241c 55%, #241b14 100%);
     -webkit-background-clip: text;
     background-clip: text;
@@ -692,7 +692,7 @@ const themeColorMeta = document.getElementById('themeColor');
 // Janela aberta: o fundo fora da página (barras do iPhone) escurece como a sobreposição
 function setDimmed(on) {
   document.documentElement.classList.toggle('help-open', on);
-  themeColorMeta.setAttribute('content', on ? '#a49481' : '#e3d0b8');
+  themeColorMeta.setAttribute('content', on ? '#9e8b78' : '#dbc3aa');
 }
 function openHelp() {
   helpOverlay.classList.add('open');
