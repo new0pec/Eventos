@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#5a5a60" id="themeColor">
+<meta name="theme-color" content="#e3d0b8" id="themeColor">
 <meta name="color-scheme" content="dark">
 <title>Eventos</title>
 <style>
@@ -20,11 +20,22 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html {
     min-height: 100%;
-    background: #5a5a60;
+    background: #e3d0b8;
+  }
+  /* Imagem de fundo fixa, a cobrir também as zonas do notch e da barra inferior */
+  html::before {
+    content: "";
+    position: fixed;
+    top: calc(-1 * env(safe-area-inset-top, 0px));
+    bottom: calc(-1 * env(safe-area-inset-bottom, 0px));
+    left: 0;
+    right: 0;
+    background: url("fundo.jpg") center / cover no-repeat;
+    z-index: -1;
   }
   /* Com a Ajuda aberta, o fundo fora da página (barras do iPhone) escurece como a sobreposição */
   html.help-open {
-    background: #242426;
+    background: #5b534a;
   }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
@@ -50,7 +61,7 @@
     width: 100%;
   }
   header { text-align: center; margin-bottom: 28px; }
-  header h1 { font-size: 28px; font-weight: 700; margin-bottom: 6px; }
+  header h1 { font-size: 28px; font-weight: 700; margin-bottom: 6px; color: #4a3b2e; }
   .card {
     background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 50%, #4c1d95 100%);
     border-radius: var(--radius);
@@ -525,12 +536,12 @@ const themeColorMeta = document.getElementById('themeColor');
 function openHelp() {
   helpOverlay.classList.add('open');
   document.documentElement.classList.add('help-open');
-  themeColorMeta.setAttribute('content', '#242426');
+  themeColorMeta.setAttribute('content', '#5b534a');
 }
 function closeHelp() {
   helpOverlay.classList.remove('open');
   document.documentElement.classList.remove('help-open');
-  themeColorMeta.setAttribute('content', '#5a5a60');
+  themeColorMeta.setAttribute('content', '#e3d0b8');
 }
 document.getElementById('helpLink').addEventListener('click', (e) => {
   e.preventDefault();
