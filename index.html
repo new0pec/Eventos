@@ -83,6 +83,8 @@
   .status { margin-top: 12px; padding: 12px; border-radius: 12px; font-size: 14px; text-align: center; display: none; }
   .status.success { display: block; background: rgba(48,209,88,0.15); color: var(--success); }
   .status.error { display: block; background: rgba(255,69,58,0.15); color: var(--danger); }
+  .cycles-row { display: none; }
+  .cycles-row.show { display: block; }
 </style>
 </head>
 <body>
@@ -103,45 +105,47 @@
     <label for="startDate">Dia para começar</label>
     <input type="date" id="startDate" required>
 
-    <label for="cycles">Vais adicionar quantas vezes?</label>
-    <select id="cycles" required>
-      <option value="1" selected>1</option>
-      <option value="2">2</option>
-      <option value="3">3</option>
-      <option value="4">4</option>
-      <option value="5">5</option>
-      <option value="6">6</option>
-      <option value="7">7</option>
-      <option value="8">8</option>
-      <option value="9">9</option>
-      <option value="10">10</option>
-      <option value="12">12</option>
-      <option value="15">15</option>
-      <option value="20">20</option>
-      <option value="30">30</option>
-      <option value="50">50</option>
-    </select>
+    <div class="cycles-row" id="cyclesRow">
+      <label for="cycles">Vais adicionar quantas vezes?</label>
+      <select id="cycles" required>
+        <option value="1" selected>1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+        <option value="9">9</option>
+        <option value="10">10</option>
+        <option value="12">12</option>
+        <option value="15">15</option>
+        <option value="20">20</option>
+        <option value="30">30</option>
+        <option value="50">50</option>
+      </select>
+    </div>
 
     <button type="submit" class="primary">Adicionar Eventos</button>
     <div id="status" class="status"></div>
   </form>
   <div class="help">
     <strong>Como funciona:</strong><br>
-    Ao escolheres 🌙 ou ☀️, o padrão é 4 dias de evento + 2 de pausa.<br>
-    O título no calendário será o ícone escolhido.
+    🌙 e ☀️ criam automaticamente o mês completo: 4 grupos de 4 dias de trabalho + 2 de pausa.<br>
+    Folgas e Férias usam o número de vezes que escolheres.
   </div>
 </div>
 <script>
 const startInput = document.getElementById('startDate');
 startInput.value = new Date().toISOString().split('T')[0];
 
-// Blur background when date picker is open (iOS native picker)
 startInput.addEventListener('focus', () => document.body.classList.add('blurred'));
 startInput.addEventListener('blur', () => document.body.classList.remove('blurred'));
 startInput.addEventListener('change', () => document.body.classList.remove('blurred'));
 
 const titleInput = document.getElementById('title');
 const cyclesSelect = document.getElementById('cycles');
+const cyclesRow = document.getElementById('cyclesRow');
 const typeButtons = document.querySelectorAll('.type-btn');
 
 let selectedTitle = '';
@@ -152,6 +156,13 @@ typeButtons.forEach(btn => {
     btn.classList.add('selected');
     selectedTitle = btn.dataset.value;
     titleInput.value = selectedTitle;
+
+    // For moon and sun: fixed monthly pattern, hide the cycles selector
+    if (selectedTitle === '🌙' || selectedTitle === '☀️') {
+      cyclesRow.classList.remove('show');
+    } else {
+      cyclesRow.classList.add('show');
+    }
   });
 });
 
@@ -180,7 +191,15 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
   const dateVal = startInput.value;
   const workDays = 4;
   const offDays = 2;
-  const cycles = parseInt(cyclesSelect.value) || 1;
+
+  // Moon and Sun: always 4 cycles (monthly)
+  let cycles;
+  if (title === '🌙' || title === '☀️') {
+    cycles = 4;
+  } else {
+    cycles = parseInt(cyclesSelect.value) || 1;
+  }
+
   if (!title || !dateVal || cycles < 1) {
     showStatus('Escolhe o tipo e a data.', 'error');
     return;
