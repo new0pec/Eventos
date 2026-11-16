@@ -532,32 +532,23 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
   lines.push('END:VCALENDAR');
 
   const ics = lines.join('\r\n');
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
   const blob = new Blob([ics], { type: 'text/calendar' });
   const url = URL.createObjectURL(blob);
 
-  if (isIOS) {
-    const a = document.createElement('a');
-    a.href = url;
-    a.target = '_blank';
-    a.rel = 'noopener';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    showStatus(`A criar ${eventCount} eventos “${title}” (${months} mês${months > 1 ? 'es' : ''})…`, 'success');
-    setTimeout(() => {
-      alert('Eventos adicionados com sucesso!');
-    }, 500);
-  } else {
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'eventos.ics';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    showStatus('Ficheiro .ics descarregado.', 'success');
+  // Abre o calendário em todos os dispositivos (iPhone e Mac)
+  const a = document.createElement('a');
+  a.href = url;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  showStatus(`A criar ${eventCount} eventos “${title}” (${months} mês${months > 1 ? 'es' : ''})…`, 'success');
+  setTimeout(() => {
     alert('Eventos adicionados com sucesso!');
-  }
+  }, 500);
+
   setTimeout(() => URL.revokeObjectURL(url), 15000);
 });
 </script>
