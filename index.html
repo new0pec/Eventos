@@ -341,7 +341,6 @@ function renderCalendar() {
 
   daysGrid.innerHTML = '';
 
-  // Previous month days
   const prevLast = new Date(year, month, 0).getDate();
   for (let i = startDay - 1; i >= 0; i--) {
     const day = document.createElement('div');
@@ -350,7 +349,6 @@ function renderCalendar() {
     daysGrid.appendChild(day);
   }
 
-  // Current month days
   const today = new Date();
   for (let d = 1; d <= lastDay.getDate(); d++) {
     const day = document.createElement('div');
@@ -366,7 +364,6 @@ function renderCalendar() {
     daysGrid.appendChild(day);
   }
 
-  // Next month days
   const totalCells = daysGrid.children.length;
   const remaining = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
   for (let i = 1; i <= remaining; i++) {
@@ -381,7 +378,6 @@ dateDisplay.addEventListener('click', () => {
   viewDate = new Date(selectedDate);
   renderCalendar();
   overlay.classList.add('open');
-  document.body.classList.add('blurred');
   dateTouched = true;
 });
 
@@ -396,19 +392,16 @@ nextMonthBtn.addEventListener('click', () => {
 
 cancelDateBtn.addEventListener('click', () => {
   overlay.classList.remove('open');
-  document.body.classList.remove('blurred');
 });
 confirmDateBtn.addEventListener('click', () => {
   updateDisplay();
   overlay.classList.remove('open');
-  document.body.classList.remove('blurred');
   dateTouched = true;
 });
 
 overlay.addEventListener('click', (e) => {
   if (e.target === overlay) {
     overlay.classList.remove('open');
-    document.body.classList.remove('blurred');
   }
 });
 
