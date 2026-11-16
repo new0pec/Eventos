@@ -84,15 +84,18 @@
     border-color: #ff453a !important;
     box-shadow: 0 0 0 3px rgba(255, 69, 58, 0.4) !important;
   }
-  input, select {
+  input, select, .date-display {
     width: 100%; background: #2c2c2e; border: 1px solid #3a3a3c; border-radius: 12px;
     padding: 14px 16px; font-size: 17px; color: var(--text); font-family: inherit;
     outline: none; margin-bottom: 16px; appearance: none; -webkit-appearance: none;
   }
-  #startDate {
-    padding: 12px 16px;
-    font-size: 17px;
+  .date-display {
     text-align: center;
+    cursor: pointer;
+    user-select: none;
+  }
+  .date-display:hover {
+    border-color: var(--accent);
   }
   select {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23a1a1aa' d='M1.41 0L6 4.58 10.59 0 12 1.41l-6 6-6-6z'/%3E%3C/svg%3E");
@@ -108,6 +111,122 @@
   .status { margin-top: 12px; padding: 12px; border-radius: 12px; font-size: 14px; text-align: center; display: none; }
   .status.success { display: block; background: rgba(48,209,88,0.15); color: var(--success); }
   .status.error { display: block; background: rgba(255,69,58,0.15); color: var(--danger); }
+
+  /* Custom Date Picker - Desktop */
+  .datepicker-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+  }
+  .datepicker-overlay.open {
+    display: flex;
+  }
+  .datepicker {
+    background: linear-gradient(135deg, #2c2c2e, #1c1c1e);
+    border-radius: 20px;
+    padding: 20px;
+    width: 340px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    border: 1px solid #3a3a3c;
+  }
+  .datepicker-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .datepicker-header button {
+    background: #3a3a3c;
+    border: none;
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 18px;
+  }
+  .datepicker-header button:hover {
+    background: #4a4a4c;
+  }
+  .datepicker-month {
+    font-size: 18px;
+    font-weight: 600;
+  }
+  .datepicker-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-bottom: 8px;
+    text-align: center;
+    font-size: 12px;
+    color: #a1a1aa;
+    font-weight: 600;
+  }
+  .datepicker-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+  .datepicker-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 15px;
+    transition: background 0.15s;
+  }
+  .datepicker-day:hover {
+    background: #3a3a3c;
+  }
+  .datepicker-day.other-month {
+    color: #555;
+  }
+  .datepicker-day.selected {
+    background: #0a84ff;
+    color: white;
+    font-weight: 600;
+  }
+  .datepicker-day.today {
+    border: 2px solid #0a84ff;
+  }
+  .datepicker-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .datepicker-actions button {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .datepicker-actions .cancel {
+    background: #3a3a3c;
+    color: white;
+  }
+  .datepicker-actions .ok {
+    background: #0a84ff;
+    color: white;
+  }
+
+  /* Hide custom picker on mobile, show native */
+  @media (max-width: 768px) {
+    .datepicker-overlay { display: none !important; }
+    .date-display { display: none; }
+  }
+  @media (min-width: 769px) {
+    #startDate { display: none; }
+  }
 
   @media (min-width: 600px) {
     .container { max-width: 540px; padding: 32px 0; }
@@ -143,6 +262,7 @@
 
     <label for="startDate">Dia para começar</label>
     <input type="date" id="startDate" required>
+    <div class="date-display" id="dateDisplay">Selecionar data</div>
 
     <label for="cycles">Quantos meses?</label>
     <select id="cycles" required>
@@ -163,24 +283,153 @@
     <div id="status" class="status"></div>
   </form>
 </div>
+
+<!-- Custom Date Picker for Desktop -->
+<div class="datepicker-overlay" id="datepickerOverlay">
+  <div class="datepicker">
+    <div class="datepicker-header">
+      <button type="button" id="prevMonth">‹</button>
+      <span class="datepicker-month" id="monthLabel"></span>
+      <button type="button" id="nextMonth">›</button>
+    </div>
+    <div class="datepicker-weekdays">
+      <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
+    </div>
+    <div class="datepicker-days" id="daysGrid"></div>
+    <div class="datepicker-actions">
+      <button type="button" class="cancel" id="cancelDate">Cancelar</button>
+      <button type="button" class="ok" id="confirmDate">OK</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const startInput = document.getElementById('startDate');
-startInput.value = new Date().toISOString().split('T')[0];
+const dateDisplay = document.getElementById('dateDisplay');
+const overlay = document.getElementById('datepickerOverlay');
+const monthLabel = document.getElementById('monthLabel');
+const daysGrid = document.getElementById('daysGrid');
+const prevMonthBtn = document.getElementById('prevMonth');
+const nextMonthBtn = document.getElementById('nextMonth');
+const cancelDateBtn = document.getElementById('cancelDate');
+const confirmDateBtn = document.getElementById('confirmDate');
 
+let selectedDate = new Date();
+let viewDate = new Date();
 let dateTouched = false;
 
+function formatDate(d) {
+  return d.toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+function toInputValue(d) {
+  return d.toISOString().split('T')[0];
+}
+
+function updateDisplay() {
+  dateDisplay.textContent = formatDate(selectedDate);
+  startInput.value = toInputValue(selectedDate);
+}
+
+function renderCalendar() {
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+  monthLabel.textContent = viewDate.toLocaleDateString('pt-PT', { month: 'long', year: 'numeric' });
+
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const startDay = firstDay.getDay();
+
+  daysGrid.innerHTML = '';
+
+  // Previous month days
+  const prevLast = new Date(year, month, 0).getDate();
+  for (let i = startDay - 1; i >= 0; i--) {
+    const day = document.createElement('div');
+    day.className = 'datepicker-day other-month';
+    day.textContent = prevLast - i;
+    daysGrid.appendChild(day);
+  }
+
+  // Current month days
+  const today = new Date();
+  for (let d = 1; d <= lastDay.getDate(); d++) {
+    const day = document.createElement('div');
+    day.className = 'datepicker-day';
+    day.textContent = d;
+    const thisDate = new Date(year, month, d);
+    if (thisDate.toDateString() === today.toDateString()) day.classList.add('today');
+    if (thisDate.toDateString() === selectedDate.toDateString()) day.classList.add('selected');
+    day.addEventListener('click', () => {
+      selectedDate = new Date(year, month, d);
+      renderCalendar();
+    });
+    daysGrid.appendChild(day);
+  }
+
+  // Next month days
+  const totalCells = daysGrid.children.length;
+  const remaining = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+  for (let i = 1; i <= remaining; i++) {
+    const day = document.createElement('div');
+    day.className = 'datepicker-day other-month';
+    day.textContent = i;
+    daysGrid.appendChild(day);
+  }
+}
+
+dateDisplay.addEventListener('click', () => {
+  viewDate = new Date(selectedDate);
+  renderCalendar();
+  overlay.classList.add('open');
+  document.body.classList.add('blurred');
+  dateTouched = true;
+});
+
+prevMonthBtn.addEventListener('click', () => {
+  viewDate.setMonth(viewDate.getMonth() - 1);
+  renderCalendar();
+});
+nextMonthBtn.addEventListener('click', () => {
+  viewDate.setMonth(viewDate.getMonth() + 1);
+  renderCalendar();
+});
+
+cancelDateBtn.addEventListener('click', () => {
+  overlay.classList.remove('open');
+  document.body.classList.remove('blurred');
+});
+confirmDateBtn.addEventListener('click', () => {
+  updateDisplay();
+  overlay.classList.remove('open');
+  document.body.classList.remove('blurred');
+  dateTouched = true;
+});
+
+overlay.addEventListener('click', (e) => {
+  if (e.target === overlay) {
+    overlay.classList.remove('open');
+    document.body.classList.remove('blurred');
+  }
+});
+
+// Native input for mobile
+startInput.value = toInputValue(selectedDate);
 startInput.addEventListener('focus', () => {
   document.body.classList.add('blurred');
   dateTouched = true;
 });
 startInput.addEventListener('blur', () => {
-  setTimeout(() => {
-    document.body.classList.remove('blurred');
-  }, 100);
+  setTimeout(() => document.body.classList.remove('blurred'), 100);
 });
 startInput.addEventListener('change', () => {
   dateTouched = true;
+  if (startInput.value) {
+    selectedDate = new Date(startInput.value + 'T00:00:00');
+    updateDisplay();
+  }
 });
+
+updateDisplay();
 
 const titleInput = document.getElementById('title');
 const cyclesSelect = document.getElementById('cycles');
@@ -234,9 +483,6 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
   const dateVal = startInput.value;
   const months = parseInt(cyclesSelect.value) || 1;
 
-  // 1 mês = 4 grupos da sequência
-  // Lua, Sol, Férias: 4 dias + 2 em branco (x4 por mês)
-  // Folgas: 2 dias + 4 em branco (x4 por mês)
   let workDays = 4;
   let offDays = 2;
   const groupsPerMonth = 4;
