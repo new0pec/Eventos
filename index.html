@@ -175,6 +175,44 @@
     padding: 16px; font-size: 17px; font-weight: 600; cursor: pointer; margin-top: 8px;
   }
   .status { margin-top: 12px; padding: 12px; border-radius: 12px; font-size: 14px; text-align: center; display: none; }
+  /* Notificação no topo do ecrã */
+  .toast {
+    position: fixed;
+    left: 50%;
+    top: calc(12px + env(safe-area-inset-top, 0px));
+    transform: translate(-50%, -150%);
+    width: calc(100% - 32px);
+    max-width: 420px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: rgba(44, 44, 46, 0.92);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid #3a3a3c;
+    border-radius: 18px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.35;
+    z-index: 2000;
+    opacity: 0;
+    transition: transform 0.35s cubic-bezier(.2,.9,.3,1.2), opacity 0.25s ease;
+    cursor: pointer;
+  }
+  .toast.show { transform: translate(-50%, 0); opacity: 1; }
+  .toast-icon {
+    flex: none;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--success);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 700;
+  }
+  .toast-title { font-weight: 600; }
+  .toast-text { color: var(--text-secondary); font-size: 14px; }
   .status.success { display: block; background: rgba(48,209,88,0.15); color: var(--success); }
   .status.error { display: block; background: rgba(255,69,58,0.15); color: var(--danger); }
   .open-cal-btn {
@@ -354,6 +392,14 @@
     <button type="button" class="open-cal-btn" id="openCalBtn">Abrir no Calendário</button>
     <div id="status" class="status"></div>
   </form>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <div class="toast-icon">✓</div>
+  <div>
+    <div class="toast-title" id="toastTitle"></div>
+    <div class="toast-text" id="toastText"></div>
+  </div>
 </div>
 
 <!-- Ajuda -->
@@ -599,6 +645,31 @@ function showStatus(msg, type) {
   if (type === 'error') showStatus._t = setTimeout(() => el.className = 'status', 6000);
 }
 
+// Notificação: só começa a contar para desaparecer quando a página está visível
+// (no iPhone o Calendário abre por cima e o utilizador volta depois)
+const toastEl = document.getElementById('toast');
+let toastTimer = null;
+function armToastHide() {
+  if (!toastEl.classList.contains('show')) return;
+  if (document.visibilityState !== 'visible' || !document.hasFocus()) return;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(hideToast, 5000);
+}
+function showToast(title, text) {
+  document.getElementById('toastTitle').textContent = title;
+  document.getElementById('toastText').textContent = text || '';
+  toastEl.classList.add('show');
+  armToastHide();
+}
+function hideToast() {
+  clearTimeout(toastTimer);
+  toastEl.classList.remove('show');
+}
+toastEl.addEventListener('click', hideToast);
+window.addEventListener('focus', armToastHide);
+document.addEventListener('visibilitychange', armToastHide);
+window.addEventListener('pageshow', armToastHide);
+
 function downloadIcs(url) {
   const a = document.createElement('a');
   a.href = url;
@@ -707,24 +778,25 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
   const blob = new Blob([ics], { type: 'text/calendar' });
   currentIcsUrl = URL.createObjectURL(blob);
 
+  // Limpa mensagens de erro anteriores
+  document.getElementById('status').className = 'status';
+  const resumo = `${eventCount} evento${eventCount > 1 ? 's' : ''} “${title}” · ${months} ${months > 1 ? 'meses' : 'mês'}`;
+
   if (isIOS) {
+    // No iPhone/iPad o Calendário abre sozinho
     openCalendar(currentIcsUrl);
-    // Não confirmamos sucesso: o utilizador ainda tem de aceitar no Calendário
-    const periodo = `${months} ${months > 1 ? 'meses' : 'mês'}`;
-    showStatus(`${eventCount} evento${eventCount > 1 ? 's' : ''} “${title}” (${periodo}) prontos — confirma “Adicionar tudo” no Calendário.`, 'success');
-    // No iPhone/iPad o Calendário abre sozinho: não mostra o botão
+    setTimeout(() => showToast('Eventos adicionados', resumo), 600);
   } else if (isMac) {
     // No Mac o browser não pode abrir o Calendário sozinho: descarrega o .ics
-    // e o utilizador abre-o (clique na transferência) → Calendário importa
     downloadIcs(currentIcsUrl);
     openCalBtn.textContent = 'Descarregar outra vez';
     openCalBtn.classList.add('show');
-    showStatus(`${eventCount} eventos “${title}” em eventos.ics — abre o ficheiro nas Transferências para adicionar ao Calendário.`, 'success');
+    showToast('Ficheiro eventos.ics descarregado', resumo + ' — abre-o nas Transferências.');
   } else {
     downloadIcs(currentIcsUrl);
     openCalBtn.textContent = 'Descarregar outra vez';
     openCalBtn.classList.add('show');
-    showStatus('Ficheiro eventos.ics descarregado — abre-o para adicionar ao calendário.', 'success');
+    showToast('Ficheiro eventos.ics descarregado', resumo + ' — abre-o para adicionar ao calendário.');
   }
 });
 </script>
