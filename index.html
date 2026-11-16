@@ -108,6 +108,16 @@
   .status { margin-top: 12px; padding: 12px; border-radius: 12px; font-size: 14px; text-align: center; display: none; }
   .status.success { display: block; background: rgba(48,209,88,0.15); color: var(--success); }
   .status.error { display: block; background: rgba(255,69,58,0.15); color: var(--danger); }
+  #fallbackLink a {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 12px 20px;
+    background: #0a84ff;
+    color: white;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+  }
 
   @media (min-width: 600px) {
     .container { max-width: 540px; padding: 32px 0; }
@@ -228,15 +238,14 @@ function showStatus(msg, type) {
   setTimeout(() => el.className = 'status', 6000);
 }
 
+const isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+
 document.getElementById('eventForm').addEventListener('submit', function(e) {
   e.preventDefault();
   const title = titleInput.value;
   const dateVal = startInput.value;
   const months = parseInt(cyclesSelect.value) || 1;
 
-  // 1 mês = 4 grupos da sequência
-  // Lua, Sol, Férias: 4 dias + 2 em branco (x4 por mês)
-  // Folgas: 2 dias + 4 em branco (x4 por mês)
   let workDays = 4;
   let offDays = 2;
   const groupsPerMonth = 4;
@@ -299,15 +308,21 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
   const dataUri = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(ics);
 
   if (isIOS) {
-    const a = document.createElement('a');
-    a.href = url;
-    a.target = '_blank';
-    a.rel = 'noopener';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    showFallbackLink(dataUri);
-    showStatus(`A criar ${eventCount} eventos “${title}” (${months} mês${months > 1 ? 'es' : ''})…`, 'success');
+    if (isStandalone) {
+      // Em modo app (ecrã inicial), usa data URI e link visível
+      showFallbackLink(dataUri);
+      showStatus(`Toca em "Abrir no Calendário" para adicionar ${eventCount} eventos.`, 'success');
+    } else {
+      const a = document.createElement('a');
+      a.href = url;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showFallbackLink(dataUri);
+      showStatus(`A criar ${eventCount} eventos “${title}” (${months} mês${months > 1 ? 'es' : ''})…`, 'success');
+    }
   } else {
     const a = document.createElement('a');
     a.href = url;
@@ -329,7 +344,7 @@ function showFallbackLink(href) {
     c.style.textAlign = 'center';
     document.getElementById('status').after(c);
   }
-  c.innerHTML = `<a href="${href}" style="color:#0a84ff;font-weight:600;text-decoration:underline;">Abrir no Calendário</a>`;
+  c.innerHTML = `<a href="${href}">Abrir no Calendário</a>`;
 }
 </script>
 </body>
