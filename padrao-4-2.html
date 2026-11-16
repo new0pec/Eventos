@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Padrão 4 dias + 2 de pausa</title>
+<style>
+  :root {
+    --bg: #0f0f12;
+    --card: #1c1c21;
+    --text: #f5f5f7;
+    --text-secondary: #a1a1aa;
+    --accent: #0a84ff;
+    --border: #2c2c2e;
+    --success: #30d158;
+    --danger: #ff453a;
+    --radius: 16px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom);
+  }
+  .container { max-width: 480px; margin: 0 auto; padding: 24px 0 40px; }
+  header { text-align: center; margin-bottom: 28px; }
+  header h1 { font-size: 26px; font-weight: 700; margin-bottom: 6px; }
+  header p { color: var(--text-secondary); font-size: 15px; }
+  .card { background: var(--card); border-radius: var(--radius); padding: 20px; border: 1px solid var(--border); }
+  label { display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+  input, select {
+    width: 100%; background: #2c2c2e; border: 1px solid #3a3a3c; border-radius: 12px;
+    padding: 14px 16px; font-size: 17px; color: var(--text); font-family: inherit;
+    outline: none; margin-bottom: 16px; appearance: none; -webkit-appearance: none;
+  }
+  select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23a1a1aa' d='M1.41 0L6 4.58 10.59 0 12 1.41l-6 6-6-6z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 16px center; padding-right: 40px; }
+  input:focus, select:focus { border-color: var(--accent); }
+  .row { display: flex; gap: 12px; }
+  .row > div { flex: 1; }
+  button.primary {
+    width: 100%; background: var(--accent); color: white; border: none; border-radius: 14px;
+    padding: 16px; font-size: 17px; font-weight: 600; cursor: pointer; margin-top: 8px;
+  }
+  .help { margin-top: 20px; padding: 16px; background: #1a1a1e; border-radius: 12px; font-size: 14px; color: var(--text-secondary); }
+  .status { margin-top: 12px; padding: 12px; border-radius: 12px; font-size: 14px; text-align: center; display: none; }
+  .status.success { display: block; background: rgba(48,209,88,0.15); color: var(--success); }
+  .status.error { display: block; background: rgba(255,69,58,0.15); color: var(--danger); }
+  .preview { margin-top: 12px; font-size: 14px; color: var(--text-secondary); }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>4 dias + 2 de pausa</h1>
+    <p>Repete o padrão quantas vezes quiseres</p>
+  </header>
+  <form id="eventForm" class="card">
+    <label for="title">Tipo de evento *</label>
+    <select id="title" required>
+      <option value="" disabled selected>Escolhe o tipo</option>
+      <option value="🌙">🌙</option>
+      <option value="☀️">☀️</option>
+      <option value="Folgas">Folgas</option>
+      <option value="Férias">Férias</option>
+    </select>
+    <label for="startDate">Dia para começar *</label>
+    <input type="date" id="startDate" required>
+    <div class="row">
+      <div>
+        <label for="workDays">Dias de trabalho</label>
+        <input type="number" id="workDays" min="1" max="14" value="4">
+      </div>
+      <div>
+        <label for="offDays">Dias de pausa</label>
+        <input type="number" id="offDays" min="1" max="14" value="2">
+      </div>
+    </div>
+    <label for="cycles">Quantas vezes repetir o padrão? *</label>
+    <input type="number" id="cycles" min="1" max="50" value="5" required>
+    <div class="preview" id="preview"></div>
+    <button type="submit" class="primary">Adicionar Eventos</button>
+    <div id="status" class="status"></div>
+  </form>
+  <div class="help">
+    <strong>Como funciona:</strong><br>
+    Cria eventos nos dias de trabalho e deixa em branco os dias de pausa.<br>
+    Exemplo predefinido: 4 dias de evento → 2 dias sem nada → repete.
+  </div>
+</div>
+<script>
+const startInput = document.getElementById('startDate');
+startInput.value = new Date().toISOString().split('T')[0];
+
+const workInput = document.getElementById('workDays');
+const offInput = document.getElementById('offDays');
+const cyclesInput = document.getElementById('cycles');
+const previewEl = document.getElementById('preview');
+
+function updatePreview() {
+  const w = parseInt(workInput.value) || 4;
+  const o = parseInt(offInput.value) || 2;
+  const c = parseInt(cyclesInput.value) || 1;
+  const total = w * c;
+  previewEl.textContent = `Vai criar ${total} eventos (${w} dias + ${o} de pausa × ${c} ciclos)`;
+}
+[workInput, offInput, cyclesInput].forEach(el => el.addEventListener('input', updatePreview));
+updatePreview();
+
+function toICSDate(date, dateOnly) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  if (dateOnly) return `${y}${m}${d}`;
+  const h = String(date.getUTCHours()).padStart(2, '0');
+  const min = String(date.getUTCMinutes()).padStart(2, '0');
+  const s = String(date.getUTCSeconds()).padStart(2, '0');
+  return `${y}${m}${d}T${h}${min}${s}Z`;
+}
+function generateUID() { return Date.now() + '-' + Math.random().toString(36).slice(2) + '@evento'; }
+function escapeICS(str) { return String(str).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n'); }
+function showStatus(msg, type) {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = 'status ' + type;
+  setTimeout(() => el.className = 'status', 6000);
+}
+
+document.getElementById('eventForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const title = document.getElementById('title').value;
+  const dateVal = startInput.value;
+  const workDays = parseInt(workInput.value) || 4;
+  const offDays = parseInt(offInput.value) || 2;
+  const cycles = parseInt(cyclesInput.value) || 1;
+  if (!title || !dateVal || cycles < 1) {
+    showStatus('Preenche todos os campos.', 'error');
+    return;
+  }
+
+  const [year, month, day] = dateVal.split('-').map(Number);
+  let current = new Date(year, month - 1, day);
+  const now = new Date();
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Padrao42//iPhone//PT',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH'
+  ];
+
+  let eventCount = 0;
+  for (let c = 0; c < cycles; c++) {
+    for (let d = 0; d < workDays; d++) {
+      const end = new Date(current);
+      end.setDate(end.getDate() + 1);
+      lines.push(
+        'BEGIN:VEVENT',
+        'UID:' + generateUID() + '-' + eventCount,
+        'DTSTAMP:' + toICSDate(now, false),
+        'SUMMARY:' + escapeICS(title),
+        'DTSTART;VALUE=DATE:' + toICSDate(current, true),
+        'DTEND;VALUE=DATE:' + toICSDate(end, true),
+        'END:VEVENT'
+      );
+      eventCount++;
+      current.setDate(current.getDate() + 1);
+    }
+    current.setDate(current.getDate() + offDays);
+  }
+  lines.push('END:VCALENDAR');
+
+  const ics = lines.join('\r\n');
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const blob = new Blob([ics], { type: 'text/calendar' });
+  const url = URL.createObjectURL(blob);
+  const dataUri = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(ics);
+
+  if (isIOS) {
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    showFallbackLink(dataUri);
+    showStatus(`A criar ${eventCount} eventos…`, 'success');
+  } else {
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'padrao-eventos.ics';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    showStatus('Ficheiro .ics descarregado.', 'success');
+  }
+  setTimeout(() => URL.revokeObjectURL(url), 15000);
+});
+
+function showFallbackLink(href) {
+  let c = document.getElementById('fallbackLink');
+  if (!c) {
+    c = document.createElement('div');
+    c.id = 'fallbackLink';
+    c.style.marginTop = '12px';
+    c.style.textAlign = 'center';
+    document.getElementById('status').after(c);
+  }
+  c.innerHTML = `<a href="${href}" style="color:#0a84ff;font-weight:600;text-decoration:underline;">Abrir no Calendário</a>`;
+}
+</script>
+</body>
+</html>
