@@ -342,7 +342,6 @@ function renderCalendar() {
 
   daysGrid.innerHTML = '';
 
-  // Always 6 rows = 42 cells
   const totalCells = 42;
   const prevLast = new Date(year, month, 0).getDate();
   const today = new Date();
@@ -354,16 +353,13 @@ function renderCalendar() {
     let dayNum, isOtherMonth = false, cellDate;
 
     if (i < startDay) {
-      // Previous month
       dayNum = prevLast - startDay + i + 1;
       isOtherMonth = true;
       cellDate = new Date(year, month - 1, dayNum);
     } else if (i < startDay + lastDay.getDate()) {
-      // Current month
       dayNum = i - startDay + 1;
       cellDate = new Date(year, month, dayNum);
     } else {
-      // Next month
       dayNum = i - startDay - lastDay.getDate() + 1;
       isOtherMonth = true;
       cellDate = new Date(year, month + 1, dayNum);
@@ -416,7 +412,6 @@ overlay.addEventListener('click', (e) => {
   }
 });
 
-// Native input for mobile
 startInput.value = toInputValue(selectedDate);
 startInput.addEventListener('focus', () => {
   document.body.classList.add('blurred');
@@ -543,23 +538,42 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
   lines.push('END:VCALENDAR');
 
   const ics = lines.join('\r\n');
-  const blob = new Blob([ics], { type: 'text/calendar' });
-  const url = URL.createObjectURL(blob);
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const isMac = /Macintosh/.test(navigator.userAgent);
 
-  const a = document.createElement('a');
-  a.href = url;
-  a.target = '_blank';
-  a.rel = 'noopener';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  if (isIOS) {
+    // iPhone: blob URL
+    const blob = new Blob([ics], { type: 'text/calendar' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 15000);
+  } else if (isMac) {
+    // Mac: data URI (evita prompt de download)
+    const dataUri = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(ics);
+    window.location.href = dataUri;
+  } else {
+    // Outros: download
+    const blob = new Blob([ics], { type: 'text/calendar' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'eventos.ics';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 15000);
+  }
 
   showStatus(`A criar ${eventCount} eventos “${title}” (${months} mês${months > 1 ? 'es' : ''})…`, 'success');
   setTimeout(() => {
     alert('Eventos adicionados com sucesso!');
   }, 500);
-
-  setTimeout(() => URL.revokeObjectURL(url), 15000);
 });
 </script>
 </body>
