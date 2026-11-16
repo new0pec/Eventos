@@ -135,9 +135,16 @@
 const startInput = document.getElementById('startDate');
 startInput.value = new Date().toISOString().split('T')[0];
 
-startInput.addEventListener('focus', () => document.body.classList.add('blurred'));
-startInput.addEventListener('blur', () => document.body.classList.remove('blurred'));
-startInput.addEventListener('change', () => document.body.classList.remove('blurred'));
+// Blur stays until the date picker is fully closed (OK pressed)
+startInput.addEventListener('focus', () => {
+  document.body.classList.add('blurred');
+});
+startInput.addEventListener('blur', () => {
+  // Small delay so it only removes after the picker is dismissed
+  setTimeout(() => {
+    document.body.classList.remove('blurred');
+  }, 100);
+});
 
 const titleInput = document.getElementById('title');
 const cyclesSelect = document.getElementById('cycles');
