@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#5a5a60">
+<meta name="theme-color" content="#5a5a60" id="themeColor">
 <meta name="color-scheme" content="dark">
 <title>Eventos</title>
 <style>
@@ -24,6 +24,10 @@
   html {
     min-height: 100%;
     background: #5a5a60;
+  }
+  /* Com a Ajuda aberta, o fundo fora da página (barras do iPhone) escurece como a sobreposição */
+  html.help-open {
+    background: #242426;
   }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
@@ -78,14 +82,17 @@
   .help-overlay {
     display: none;
     position: fixed;
-    inset: 0;
+    top: calc(-1 * env(safe-area-inset-top, 0px));
+    bottom: calc(-1 * env(safe-area-inset-bottom, 0px));
+    left: 0;
+    right: 0;
     background: rgba(0,0,0,0.6);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
     z-index: 1001;
     align-items: center;
     justify-content: center;
-    padding: 16px;
+    padding: calc(16px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px));
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
@@ -493,16 +500,27 @@ confirmDateBtn.addEventListener('click', () => {
 });
 
 const helpOverlay = document.getElementById('helpOverlay');
+const themeColorMeta = document.getElementById('themeColor');
+function openHelp() {
+  helpOverlay.classList.add('open');
+  document.documentElement.classList.add('help-open');
+  themeColorMeta.setAttribute('content', '#242426');
+}
+function closeHelp() {
+  helpOverlay.classList.remove('open');
+  document.documentElement.classList.remove('help-open');
+  themeColorMeta.setAttribute('content', '#5a5a60');
+}
 document.getElementById('helpLink').addEventListener('click', (e) => {
   e.preventDefault();
-  helpOverlay.classList.add('open');
+  openHelp();
 });
-document.getElementById('helpClose').addEventListener('click', () => helpOverlay.classList.remove('open'));
+document.getElementById('helpClose').addEventListener('click', closeHelp);
 helpOverlay.addEventListener('click', (e) => {
-  if (e.target === helpOverlay) helpOverlay.classList.remove('open');
+  if (e.target === helpOverlay) closeHelp();
 });
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') helpOverlay.classList.remove('open');
+  if (e.key === 'Escape') closeHelp();
 });
 
 overlay.addEventListener('click', (e) => {
