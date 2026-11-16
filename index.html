@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="color-scheme" content="dark">
 <title>Eventos</title>
 <style>
   :root {
@@ -52,8 +53,7 @@
     gap: 12px;
     margin-bottom: 20px;
   }
-  button.type-btn, .type-btn {
-    background-color: #2c2c2e !important;
+  .type-btn {
     background: #2c2c2e !important;
     border: 2px solid #3a3a3c !important;
     border-radius: 16px !important;
@@ -66,10 +66,8 @@
     text-align: center;
     -webkit-appearance: none !important;
     appearance: none !important;
-    background-image: none !important;
   }
-  button.type-btn.selected, .type-btn.selected {
-    background-color: #6a6a6e !important;
+  .type-btn.selected {
     background: #6a6a6e !important;
     border-color: #0a84ff !important;
     box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.35) !important;
@@ -100,19 +98,16 @@
   .status.success { display: block; background: rgba(48,209,88,0.15); color: var(--success); }
   .status.error { display: block; background: rgba(255,69,58,0.15); color: var(--danger); }
 
-  /* Responsive adjustments */
   @media (min-width: 600px) {
     .container { max-width: 540px; padding: 32px 0 48px; }
     header h1 { font-size: 32px; }
     .card { padding: 28px; }
     .type-btn { padding: 20px 12px; font-size: 18px; }
   }
-
   @media (min-width: 900px) {
     .container { max-width: 600px; }
     .buttons { gap: 16px; }
   }
-
   @media (max-width: 380px) {
     .type-btn { padding: 14px 8px; font-size: 16px; }
     .card { padding: 16px; }
@@ -128,10 +123,10 @@
   <form id="eventForm" class="card">
     <label>Tipo de evento</label>
     <div class="buttons">
-      <button type="button" class="type-btn" data-value="🌙">🌙</button>
-      <button type="button" class="type-btn" data-value="☀️">☀️</button>
-      <button type="button" class="type-btn" data-value="Folgas">Folgas</button>
-      <button type="button" class="type-btn" data-value="Férias">Férias</button>
+      <button type="button" class="type-btn" data-value="🌙" style="background:#2c2c2e !important; color:#f5f5f7 !important; -webkit-appearance:none;">🌙</button>
+      <button type="button" class="type-btn" data-value="☀️" style="background:#2c2c2e !important; color:#f5f5f7 !important; -webkit-appearance:none;">☀️</button>
+      <button type="button" class="type-btn" data-value="Folgas" style="background:#2c2c2e !important; color:#f5f5f7 !important; -webkit-appearance:none;">Folgas</button>
+      <button type="button" class="type-btn" data-value="Férias" style="background:#2c2c2e !important; color:#f5f5f7 !important; -webkit-appearance:none;">Férias</button>
     </div>
     <input type="hidden" id="title" required>
 
@@ -167,15 +162,6 @@
   </div>
 </div>
 <script>
-// Force dark button colors on load (to beat cache/browser styles)
-document.addEventListener('DOMContentLoaded', function() {
-  document.querySelectorAll('.type-btn').forEach(btn => {
-    btn.style.setProperty('background-color', '#2c2c2e', 'important');
-    btn.style.setProperty('background', '#2c2c2e', 'important');
-    btn.style.setProperty('color', '#f5f5f7', 'important');
-  });
-});
-
 const startInput = document.getElementById('startDate');
 startInput.value = new Date().toISOString().split('T')[0];
 
@@ -200,16 +186,22 @@ const typeButtons = document.querySelectorAll('.type-btn');
 
 let selectedTitle = '';
 
+function setBtnDark(btn) {
+  btn.style.cssText = 'background:#2c2c2e !important; color:#f5f5f7 !important; -webkit-appearance:none; border:2px solid #3a3a3c; border-radius:16px; padding:18px 10px; font-size:17px; font-weight:600; cursor:pointer;';
+}
+function setBtnSelected(btn) {
+  btn.style.cssText = 'background:#6a6a6e !important; color:#f5f5f7 !important; -webkit-appearance:none; border:2px solid #0a84ff; border-radius:16px; padding:18px 10px; font-size:17px; font-weight:600; cursor:pointer; box-shadow:0 0 0 3px rgba(10,132,255,0.35);';
+}
+
 typeButtons.forEach(btn => {
+  setBtnDark(btn);
   btn.addEventListener('click', () => {
     typeButtons.forEach(b => {
       b.classList.remove('selected');
-      b.style.setProperty('background-color', '#2c2c2e', 'important');
-      b.style.setProperty('background', '#2c2c2e', 'important');
+      setBtnDark(b);
     });
     btn.classList.add('selected');
-    btn.style.setProperty('background-color', '#6a6a6e', 'important');
-    btn.style.setProperty('background', '#6a6a6e', 'important');
+    setBtnSelected(btn);
     selectedTitle = btn.dataset.value;
     titleInput.value = selectedTitle;
   });
