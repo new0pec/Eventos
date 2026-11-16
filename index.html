@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Adicionar Evento ao Calendário</title>
+<style>
+body{font-family:-apple-system,sans-serif;background:#0f0f12;color:#f5f5f7;padding:20px;max-width:480px;margin:auto}
+select,input,textarea{width:100%;padding:14px;margin:8px 0;border-radius:12px;border:1px solid #3a3a3c;background:#2c2c2e;color:#fff;font-size:17px}
+button{width:100%;padding:16px;background:#0a84ff;color:#fff;border:none;border-radius:14px;font-size:17px;font-weight:600;margin-top:10px}
+.help{margin-top:20px;padding:16px;background:#1a1a1e;border-radius:12px;font-size:14px;color:#a1a1aa}
+</style>
+</head>
+<body>
+<h1>Adicionar Evento</h1>
+<p>Eventos de dia inteiro para o Calendário do iPhone</p>
+<form id="f">
+<label>Tipo</label>
+<select id="title" required>
+<option value="" disabled selected>Escolhe</option>
+<option>🌙</option><option>☀️</option><option>Folgas</option><option>Férias</option>
+</select>
+<label>Data</label>
+<input type="date" id="eventDate" required>
+<div id="more">Ver mais</div>
+<div id="moreContent" style="display:none">
+<input id="location" placeholder="Local"><br>
+<textarea id="description" placeholder="Notas"></textarea>
+</div>
+<button type="submit">Adicionar ao Calendário</button>
+</form>
+<div class="help">Abre no Safari. Escolhe o tipo e a data e toca no botão.</div>
+<script>
+document.getElementById('eventDate').value=new Date().toISOString().split('T')[0];
+document.getElementById('more').onclick=()=>document.getElementById('moreContent').style.display=document.getElementById('moreContent').style.display==='none'?'block':'none';
+document.getElementById('f').onsubmit=e=>{e.preventDefault();alert('Para a versão completa com geração de ICS, usa o ficheiro local ou pede uma atualização.');};
+</script>
+</body>
+</html>
