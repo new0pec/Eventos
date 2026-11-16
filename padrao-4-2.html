@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>4 dias + 2 de pausa</title>
+<title>Eventos</title>
 <style>
   :root {
     --bg: #0f0f12;
@@ -28,7 +28,7 @@
   }
   .container { max-width: 480px; margin: 0 auto; padding: 24px 0 40px; }
   header { text-align: center; margin-bottom: 28px; }
-  header h1 { font-size: 26px; font-weight: 700; margin-bottom: 6px; }
+  header h1 { font-size: 28px; font-weight: 700; margin-bottom: 6px; }
   header p { color: var(--text-secondary); font-size: 15px; }
   .card { background: var(--card); border-radius: var(--radius); padding: 20px; border: 1px solid var(--border); }
   label { display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -65,8 +65,6 @@
     outline: none; margin-bottom: 16px; appearance: none; -webkit-appearance: none;
   }
   input:focus { border-color: var(--accent); }
-  .row { display: flex; gap: 12px; }
-  .row > div { flex: 1; }
   button.primary {
     width: 100%; background: var(--accent); color: white; border: none; border-radius: 14px;
     padding: 16px; font-size: 17px; font-weight: 600; cursor: pointer; margin-top: 8px;
@@ -81,7 +79,7 @@
 <body>
 <div class="container">
   <header>
-    <h1>4 dias + 2 de pausa</h1>
+    <h1>Eventos</h1>
     <p>Escolhe o tipo e repete o padrão</p>
   </header>
   <form id="eventForm" class="card">
@@ -97,17 +95,6 @@
     <label for="startDate">Dia para começar *</label>
     <input type="date" id="startDate" required>
 
-    <div class="row">
-      <div>
-        <label for="workDays">Dias de trabalho</label>
-        <input type="number" id="workDays" min="1" max="14" value="4">
-      </div>
-      <div>
-        <label for="offDays">Dias de pausa</label>
-        <input type="number" id="offDays" min="1" max="14" value="2">
-      </div>
-    </div>
-
     <label for="cycles">Quantas vezes repetir o padrão? *</label>
     <input type="number" id="cycles" min="1" max="50" value="5" required>
 
@@ -117,7 +104,7 @@
   </form>
   <div class="help">
     <strong>Como funciona:</strong><br>
-    Ao escolheres 🌙 ou ☀️, o padrão fica automaticamente em 4 dias de evento + 2 de pausa.<br>
+    Ao escolheres 🌙 ou ☀️, o padrão é 4 dias de evento + 2 de pausa.<br>
     O título no calendário será o ícone escolhido.
   </div>
 </div>
@@ -126,8 +113,6 @@ const startInput = document.getElementById('startDate');
 startInput.value = new Date().toISOString().split('T')[0];
 
 const titleInput = document.getElementById('title');
-const workInput = document.getElementById('workDays');
-const offInput = document.getElementById('offDays');
 const cyclesInput = document.getElementById('cycles');
 const previewEl = document.getElementById('preview');
 const typeButtons = document.querySelectorAll('.type-btn');
@@ -140,24 +125,17 @@ typeButtons.forEach(btn => {
     btn.classList.add('selected');
     selectedTitle = btn.dataset.value;
     titleInput.value = selectedTitle;
-
-    if (selectedTitle === '🌙' || selectedTitle === '☀️') {
-      workInput.value = 4;
-      offInput.value = 2;
-    }
     updatePreview();
   });
 });
 
 function updatePreview() {
-  const w = parseInt(workInput.value) || 4;
-  const o = parseInt(offInput.value) || 2;
   const c = parseInt(cyclesInput.value) || 1;
-  const total = w * c;
+  const total = 4 * c;
   const titleText = selectedTitle || '—';
-  previewEl.textContent = `Vai criar ${total} eventos “${titleText}” (${w} dias + ${o} de pausa × ${c} ciclos)`;
+  previewEl.textContent = `Vai criar ${total} eventos “${titleText}” (4 dias + 2 de pausa × ${c} ciclos)`;
 }
-[workInput, offInput, cyclesInput].forEach(el => el.addEventListener('input', updatePreview));
+cyclesInput.addEventListener('input', updatePreview);
 updatePreview();
 
 function toICSDate(date, dateOnly) {
@@ -183,8 +161,8 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
   e.preventDefault();
   const title = titleInput.value;
   const dateVal = startInput.value;
-  const workDays = parseInt(workInput.value) || 4;
-  const offDays = parseInt(offInput.value) || 2;
+  const workDays = 4;
+  const offDays = 2;
   const cycles = parseInt(cyclesInput.value) || 1;
   if (!title || !dateVal || cycles < 1) {
     showStatus('Escolhe o tipo e a data.', 'error');
@@ -197,7 +175,7 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
   const lines = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//Padrao42//iPhone//PT',
+    'PRODID:-//Eventos//iPhone//PT',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH'
   ];
@@ -242,7 +220,7 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
   } else {
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'padrao-eventos.ics';
+    a.download = 'eventos.ics';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
