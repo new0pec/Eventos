@@ -278,20 +278,8 @@
     <input type="date" id="startDate" required>
     <div class="date-display" id="dateDisplay">Selecionar data</div>
 
-    <label for="cycles">Quantos meses?</label>
-    <select id="cycles" required>
-      <option value="1" selected>1</option>
-      <option value="2">2</option>
-      <option value="3">3</option>
-      <option value="4">4</option>
-      <option value="5">5</option>
-      <option value="6">6</option>
-      <option value="7">7</option>
-      <option value="8">8</option>
-      <option value="9">9</option>
-      <option value="10">10</option>
-      <option value="12">12</option>
-    </select>
+    <label for="cycles" id="cyclesLabel">Quantos meses?</label>
+    <select id="cycles" required></select>
 
     <button type="submit" class="primary">Adicionar Eventos</button>
     <button type="button" class="open-cal-btn" id="openCalBtn">Abrir no Calendário</button>
@@ -338,8 +326,12 @@ let currentIcsUrl = null;
 function formatDate(d) {
   return d.toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
+// Usa a data local (toISOString converte para UTC e pode recuar um dia)
 function toInputValue(d) {
-  return d.toISOString().split('T')[0];
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
 function updateDisplay() {
@@ -449,8 +441,23 @@ updateDisplay();
 const titleInput = document.getElementById('title');
 const cyclesSelect = document.getElementById('cycles');
 const typeButtons = document.querySelectorAll('.type-btn');
+const cyclesLabel = document.getElementById('cyclesLabel');
 
 let selectedTitle = '';
+
+// Férias = período contínuo em dias; restantes tipos = turnos em meses
+function fillDurationOptions(isVacation) {
+  const prev = cyclesSelect.value;
+  const values = isVacation
+    ? Array.from({ length: 30 }, (_, i) => i + 1)
+    : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+  const def = isVacation ? '7' : '1';
+  cyclesLabel.textContent = isVacation ? 'Quantos dias?' : 'Quantos meses?';
+  cyclesSelect.innerHTML = values.map(v => `<option value="${v}">${v}</option>`).join('');
+  cyclesSelect.value = cyclesSelect.dataset.mode === (isVacation ? 'days' : 'months') && prev ? prev : def;
+  cyclesSelect.dataset.mode = isVacation ? 'days' : 'months';
+}
+fillDurationOptions(false);
 
 function setBtnDark(btn) {
   btn.style.cssText = 'background:#2c2c2e !important; color:#f5f5f7 !important; -webkit-appearance:none; border:2px solid #3a3a3c; border-radius:16px; padding:18px 10px; font-size:17px; font-weight:600; cursor:pointer;';
@@ -470,6 +477,7 @@ typeButtons.forEach(btn => {
     setBtnSelected(btn);
     selectedTitle = btn.dataset.value;
     titleInput.value = selectedTitle;
+    fillDurationOptions(selectedTitle === 'Férias');
   });
 });
 
@@ -512,11 +520,11 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
   e.preventDefault();
   const title = titleInput.value;
   const dateVal = startInput.value;
-  const months = parseInt(cyclesSelect.value) || 1;
+  const amount = parseInt(cyclesSelect.value) || 1;
+  const isVacation = title === 'Férias';
 
   let workDays = 4;
   let offDays = 2;
-  const groupsPerMonth = 4;
   if (title === 'Folgas') {
     workDays = 2;
     offDays = 4;
@@ -530,15 +538,19 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
     showStatus('Escolhe o dia para começar.', 'error');
     return;
   }
-  if (months < 1) {
-    showStatus('Escolhe quantos meses.', 'error');
+  if (amount < 1) {
+    showStatus(isVacation ? 'Escolhe quantos dias.' : 'Escolhe quantos meses.', 'error');
     return;
   }
 
-  const totalGroups = groupsPerMonth * months;
-
   const [year, month, day] = dateVal.split('-').map(Number);
-  let current = new Date(year, month - 1, day);
+  const startDay = new Date(year, month - 1, day);
+  let current = new Date(startDay);
+  // Fim exclusivo: N meses de calendário (ou N dias para Férias)
+  const periodEnd = isVacation
+    ? new Date(year, month - 1, day + amount)
+    : new Date(year, month - 1 + amount,
+        Math.min(day, new Date(year, month + amount, 0).getDate()));
   const now = new Date();
   const lines = [
     'BEGIN:VCALENDAR',
@@ -549,23 +561,33 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
   ];
 
   let eventCount = 0;
-  for (let c = 0; c < totalGroups; c++) {
-    for (let d = 0; d < workDays; d++) {
-      const end = new Date(current);
-      end.setDate(end.getDate() + 1);
-      lines.push(
-        'BEGIN:VEVENT',
-        'UID:' + generateUID() + '-' + eventCount,
-        'DTSTAMP:' + toICSDate(now, false),
-        'SUMMARY:' + escapeICS(title),
-        'DTSTART;VALUE=DATE:' + toICSDate(current, true),
-        'DTEND;VALUE=DATE:' + toICSDate(end, true),
-        'END:VEVENT'
-      );
-      eventCount++;
-      current.setDate(current.getDate() + 1);
+  function pushEvent(start, end) {
+    lines.push(
+      'BEGIN:VEVENT',
+      'UID:' + generateUID() + '-' + eventCount,
+      'DTSTAMP:' + toICSDate(now, false),
+      'SUMMARY:' + escapeICS(title),
+      'DTSTART;VALUE=DATE:' + toICSDate(start, true),
+      'DTEND;VALUE=DATE:' + toICSDate(end, true),
+      'END:VEVENT'
+    );
+    eventCount++;
+  }
+
+  if (isVacation) {
+    // Um único evento contínuo
+    pushEvent(startDay, periodEnd);
+  } else {
+    // Ciclos de trabalho/folga até ao fim do período
+    while (current < periodEnd) {
+      for (let d = 0; d < workDays && current < periodEnd; d++) {
+        const end = new Date(current);
+        end.setDate(end.getDate() + 1);
+        pushEvent(current, end);
+        current.setDate(current.getDate() + 1);
+      }
+      current.setDate(current.getDate() + offDays);
     }
-    current.setDate(current.getDate() + offDays);
   }
   lines.push('END:VCALENDAR');
 
@@ -583,8 +605,12 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
 
   if (isIOS) {
     openCalendar(currentIcsUrl);
-    showStatus(`A criar ${eventCount} eventos “${title}” (${months} mês${months > 1 ? 'es' : ''})…`, 'success');
-    setTimeout(() => alert('Eventos adicionados com sucesso!'), 500);
+    // Não confirmamos sucesso: o utilizador ainda tem de aceitar no Calendário
+    const periodo = isVacation
+      ? `${amount} dia${amount > 1 ? 's' : ''}`
+      : `${amount} ${amount > 1 ? 'meses' : 'mês'}`;
+    showStatus(`${eventCount} evento${eventCount > 1 ? 's' : ''} “${title}” (${periodo}) prontos — confirma “Adicionar tudo” no Calendário.`, 'success');
+    openCalBtn.classList.add('show');
   } else if (isMac) {
     // No Mac, mostra botão para o utilizador clicar (mais fiável)
     openCalBtn.classList.add('show');
@@ -596,8 +622,7 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    showStatus('Ficheiro .ics descarregado.', 'success');
-    alert('Eventos adicionados com sucesso!');
+    showStatus('Ficheiro .ics descarregado — abre-o para adicionar ao calendário.', 'success');
   }
 });
 </script>
