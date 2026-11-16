@@ -170,10 +170,11 @@
   .datepicker-days {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: repeat(6, 40px);
     gap: 4px;
+    height: 264px;
   }
   .datepicker-day {
-    aspect-ratio: 1;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -341,35 +342,45 @@ function renderCalendar() {
 
   daysGrid.innerHTML = '';
 
+  // Always 6 rows = 42 cells
+  const totalCells = 42;
   const prevLast = new Date(year, month, 0).getDate();
-  for (let i = startDay - 1; i >= 0; i--) {
-    const day = document.createElement('div');
-    day.className = 'datepicker-day other-month';
-    day.textContent = prevLast - i;
-    daysGrid.appendChild(day);
-  }
-
   const today = new Date();
-  for (let d = 1; d <= lastDay.getDate(); d++) {
+
+  for (let i = 0; i < totalCells; i++) {
     const day = document.createElement('div');
     day.className = 'datepicker-day';
-    day.textContent = d;
-    const thisDate = new Date(year, month, d);
-    if (thisDate.toDateString() === today.toDateString()) day.classList.add('today');
-    if (thisDate.toDateString() === selectedDate.toDateString()) day.classList.add('selected');
-    day.addEventListener('click', () => {
-      selectedDate = new Date(year, month, d);
-      renderCalendar();
-    });
-    daysGrid.appendChild(day);
-  }
 
-  const totalCells = daysGrid.children.length;
-  const remaining = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
-  for (let i = 1; i <= remaining; i++) {
-    const day = document.createElement('div');
-    day.className = 'datepicker-day other-month';
-    day.textContent = i;
+    let dayNum, isOtherMonth = false, cellDate;
+
+    if (i < startDay) {
+      // Previous month
+      dayNum = prevLast - startDay + i + 1;
+      isOtherMonth = true;
+      cellDate = new Date(year, month - 1, dayNum);
+    } else if (i < startDay + lastDay.getDate()) {
+      // Current month
+      dayNum = i - startDay + 1;
+      cellDate = new Date(year, month, dayNum);
+    } else {
+      // Next month
+      dayNum = i - startDay - lastDay.getDate() + 1;
+      isOtherMonth = true;
+      cellDate = new Date(year, month + 1, dayNum);
+    }
+
+    day.textContent = dayNum;
+    if (isOtherMonth) day.classList.add('other-month');
+    if (cellDate.toDateString() === today.toDateString()) day.classList.add('today');
+    if (cellDate.toDateString() === selectedDate.toDateString()) day.classList.add('selected');
+
+    if (!isOtherMonth) {
+      day.addEventListener('click', () => {
+        selectedDate = new Date(year, month, dayNum);
+        renderCalendar();
+      });
+    }
+
     daysGrid.appendChild(day);
   }
 }
@@ -535,7 +546,6 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
   const blob = new Blob([ics], { type: 'text/calendar' });
   const url = URL.createObjectURL(blob);
 
-  // Abre o calendário em todos os dispositivos (iPhone e Mac)
   const a = document.createElement('a');
   a.href = url;
   a.target = '_blank';
