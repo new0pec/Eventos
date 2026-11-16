@@ -236,9 +236,16 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
   e.preventDefault();
   const title = titleInput.value;
   const dateVal = startInput.value;
-  const workDays = 4;
-  const offDays = 2;
   const cycles = parseInt(cyclesSelect.value) || 1;
+
+  // Padrão diferente para Folgas: 2 dias + 4 em branco
+  // Para os outros: 4 dias + 2 em branco
+  let workDays = 4;
+  let offDays = 2;
+  if (title === 'Folgas') {
+    workDays = 2;
+    offDays = 4;
+  }
 
   if (!title) {
     showStatus('Escolhe um tipo de evento.', 'error');
