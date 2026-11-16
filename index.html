@@ -10,12 +10,9 @@
 <title>Eventos</title>
 <style>
   :root {
-    --bg: #0f0f12;
-    --card: #1c1c21;
     --text: #f5f5f7;
     --text-secondary: #a1a1aa;
     --accent: #0a84ff;
-    --border: #2c2c2e;
     --success: #30d158;
     --danger: #ff453a;
     --radius: 16px;
@@ -31,7 +28,6 @@
   }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
-    margin: 0;
     min-height: 100dvh;
     background: transparent;
     color: var(--text);
@@ -117,8 +113,6 @@
   }
   .help-box h2 { font-size: 20px; margin-bottom: 12px; }
   .help-box p + p { margin-top: 12px; }
-  .help-box h3 { font-size: 15px; margin: 14px 0 4px; color: #e9d5ff; }
-  .help-box ul { padding-left: 18px; color: var(--text-secondary); }
   .help-box p { color: var(--text-secondary); }
   .help-box button {
     width: 100%; margin-top: 18px; padding: 12px; border: none; border-radius: 12px;
@@ -214,10 +208,9 @@
   }
   .toast-title { font-weight: 600; }
   .toast-text { color: var(--text-secondary); font-size: 14px; }
-  .status.success { display: block; background: rgba(48,209,88,0.15); color: var(--success); }
   .status.error { display: block; background: rgba(255,69,58,0.15); color: var(--danger); }
 
-  /* Custom Date Picker - Desktop */
+  /* Seletor de datas (computador) */
   .datepicker-overlay {
     display: none;
     position: fixed;
@@ -361,11 +354,10 @@
       <a href="#ajuda" class="help-link" id="helpLink">Ajuda</a>
     </div>
     <div class="buttons">
-      <button type="button" class="type-btn full-width" data-value="🌙" style="background:#2c2c2e !important; color:#f5f5f7 !important; -webkit-appearance:none;">Trabalho</button>
-      <button type="button" class="type-btn" data-value="Folgas" style="background:#2c2c2e !important; color:#f5f5f7 !important; -webkit-appearance:none;">Folgas</button>
-      <button type="button" class="type-btn" data-value="Férias" style="background:#2c2c2e !important; color:#f5f5f7 !important; -webkit-appearance:none;">Férias</button>
+      <button type="button" class="type-btn full-width" data-value="🌙">Trabalho</button>
+      <button type="button" class="type-btn" data-value="Folgas">Folgas</button>
+      <button type="button" class="type-btn" data-value="Férias">Férias</button>
     </div>
-    <input type="hidden" id="title" required>
 
     <label for="startDate">Dia para começar</label>
     <input type="date" id="startDate" required>
@@ -400,7 +392,7 @@
   </div>
 </div>
 
-<!-- Custom Date Picker for Desktop -->
+<!-- Seletor de datas (computador) -->
 <div class="datepicker-overlay" id="datepickerOverlay">
   <div class="datepicker">
     <div class="datepicker-header">
@@ -556,7 +548,6 @@ overlay.addEventListener('click', (e) => {
   }
 });
 
-startInput.value = toInputValue(selectedDate);
 startInput.addEventListener('focus', () => {
   document.body.classList.add('blurred');
   dateTouched = true;
@@ -574,7 +565,6 @@ startInput.addEventListener('change', () => {
 
 updateDisplay();
 
-const titleInput = document.getElementById('title');
 const cyclesSelect = document.getElementById('cycles');
 const typeButtons = document.querySelectorAll('.type-btn');
 
@@ -584,46 +574,31 @@ cyclesSelect.innerHTML = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
   .map(v => `<option value="${v}">${v}</option>`).join('');
 cyclesSelect.value = '1';
 
-function setBtnDark(btn) {
-  btn.style.cssText = 'background:#2c2c2e !important; color:#f5f5f7 !important; -webkit-appearance:none; border:2px solid #3a3a3c; border-radius:16px; padding:18px 10px; font-size:17px; font-weight:600; cursor:pointer;';
-}
-function setBtnSelected(btn) {
-  btn.style.cssText = 'background:#6a6a6e !important; color:#f5f5f7 !important; -webkit-appearance:none; border:2px solid #ff453a; border-radius:16px; padding:18px 10px; font-size:17px; font-weight:600; cursor:pointer; box-shadow:0 0 0 3px rgba(255,69,58,0.4);';
-}
-
 typeButtons.forEach(btn => {
-  setBtnDark(btn);
   btn.addEventListener('click', () => {
-    typeButtons.forEach(b => {
-      b.classList.remove('selected');
-      setBtnDark(b);
-    });
+    typeButtons.forEach(b => b.classList.remove('selected'));
     btn.classList.add('selected');
-    setBtnSelected(btn);
     selectedTitle = btn.dataset.value;
-    titleInput.value = selectedTitle;
   });
 });
 
-function toICSDate(date, dateOnly) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  if (dateOnly) return `${y}${m}${d}`;
-  const h = String(date.getUTCHours()).padStart(2, '0');
-  const min = String(date.getUTCMinutes()).padStart(2, '0');
-  const s = String(date.getUTCSeconds()).padStart(2, '0');
-  return `${y}${m}${d}T${h}${min}${s}Z`;
+// Data de um evento de dia inteiro (AAAAMMDD, hora local)
+function toICSDate(date) {
+  return toInputValue(date).replace(/-/g, '');
+}
+// Carimbo de criação em UTC (AAAAMMDDTHHMMSSZ)
+function toICSStamp(date) {
+  return date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
 }
 function generateUID() { return Date.now() + '-' + Math.random().toString(36).slice(2) + '@evento'; }
 function escapeICS(str) { return String(str).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n'); }
-function showStatus(msg, type) {
-  const el = document.getElementById('status');
-  el.textContent = msg;
-  el.className = 'status ' + type;
-  clearTimeout(showStatus._t);
-  // Erros desaparecem; mensagens de sucesso ficam visíveis
-  if (type === 'error') showStatus._t = setTimeout(() => el.className = 'status', 6000);
+const statusEl = document.getElementById('status');
+let statusTimer = null;
+function showError(msg) {
+  statusEl.textContent = msg;
+  statusEl.className = 'status error';
+  clearTimeout(statusTimer);
+  statusTimer = setTimeout(() => statusEl.className = 'status', 6000);
 }
 
 // Notificação: só começa a contar para desaparecer quando a página está visível
@@ -678,30 +653,23 @@ function isIOSDevice() {
 
 document.getElementById('eventForm').addEventListener('submit', function(e) {
   e.preventDefault();
-  const title = titleInput.value;
+  const title = selectedTitle;
   const dateVal = startInput.value;
   const months = parseInt(cyclesSelect.value) || 1;
 
-  // 🌙, ☀️ e Férias: 4 dias ocupados + 2 livres, 4 vezes por mês
-  let workDays = 4;
-  let offDays = 2;
-  // 🌙: 6 blocos por mês (🌙, ☀️, 🌙, ☀️, 🌙, ☀️); restantes: 4 blocos
+  // Trabalho (🌙): 6 blocos de 4 dias + 2 livres por mês, alternando 🌙 / ☀️
+  // Férias: 4 blocos de 4 dias + 2 livres por mês
+  // Folgas: 4 blocos de 2 dias + 4 livres por mês
+  const workDays = title === 'Folgas' ? 2 : 4;
+  const offDays = title === 'Folgas' ? 4 : 2;
   const groupsPerMonth = title === '🌙' ? 6 : 4;
-  if (title === 'Folgas') {
-    workDays = 2;
-    offDays = 4;
-  }
 
   if (!title) {
-    showStatus('Escolhe um tipo de evento.', 'error');
+    showError('Escolhe um tipo de evento.');
     return;
   }
   if (!dateTouched || !dateVal) {
-    showStatus('Escolhe o dia para começar.', 'error');
-    return;
-  }
-  if (months < 1) {
-    showStatus('Escolhe quantos meses.', 'error');
+    showError('Escolhe o dia para começar.');
     return;
   }
 
@@ -722,16 +690,15 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
     lines.push(
       'BEGIN:VEVENT',
       'UID:' + generateUID() + '-' + eventCount,
-      'DTSTAMP:' + toICSDate(now, false),
+      'DTSTAMP:' + toICSStamp(now),
       'SUMMARY:' + escapeICS(summary),
-      'DTSTART;VALUE=DATE:' + toICSDate(start, true),
-      'DTEND;VALUE=DATE:' + toICSDate(end, true),
+      'DTSTART;VALUE=DATE:' + toICSDate(start),
+      'DTEND;VALUE=DATE:' + toICSDate(end),
       'END:VEVENT'
     );
     eventCount++;
   }
 
-  // 🌙: os blocos de trabalho alternam 🌙 / ☀️ (começa em 🌙); os dias livres ficam em branco
   const blockTitle = (c) => (title === '🌙' && c % 2 === 1) ? '☀️' : title;
 
   for (let c = 0; c < totalGroups; c++) {
@@ -747,10 +714,7 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
   lines.push('END:VCALENDAR');
 
   const ics = lines.join('\r\n');
-  const isIOS = isIOSDevice();
-  const isMac = !isIOS && /Macintosh/.test(navigator.userAgent);
-
-  // Revoke previous URL
+  // Liberta o ficheiro gerado anteriormente
   if (currentIcsUrl) {
     URL.revokeObjectURL(currentIcsUrl);
   }
@@ -759,20 +723,17 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
   currentIcsUrl = URL.createObjectURL(blob);
 
   // Limpa mensagens de erro anteriores
-  document.getElementById('status').className = 'status';
+  statusEl.className = 'status';
   const resumo = `${eventCount} evento${eventCount > 1 ? 's' : ''} “${title === "🌙" ? "Trabalho" : title}” · ${months} ${months > 1 ? 'meses' : 'mês'}`;
 
-  if (isIOS) {
+  if (isIOSDevice()) {
     // No iPhone/iPad o Calendário abre sozinho
     openCalendar(currentIcsUrl);
     setTimeout(() => showToast('Eventos adicionados', resumo), 600);
-  } else if (isMac) {
-    // No Mac o browser não pode abrir o Calendário sozinho: descarrega o .ics
+  } else {
+    // No computador o browser não abre o Calendário sozinho: descarrega o .ics
     downloadIcs(currentIcsUrl);
     showToast('Ficheiro eventos.ics descarregado', resumo + ' — abre-o nas Transferências.');
-  } else {
-    downloadIcs(currentIcsUrl);
-    showToast('Ficheiro eventos.ics descarregado', resumo + ' — abre-o para adicionar ao calendário.');
   }
 });
 </script>
