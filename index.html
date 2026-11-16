@@ -127,8 +127,8 @@
   </form>
   <div class="help">
     <strong>Como funciona:</strong><br>
-    🌙 e ☀️: cada vez cria 4 dias de trabalho + 2 de pausa.<br>
-    Escolhe quantas vezes queres repetir esse padrão.
+    🌙 e ☀️: criam automaticamente 4 grupos de 4 dias de trabalho + 2 de pausa.<br>
+    Folgas e Férias: usam o número de vezes que escolheres.
   </div>
 </div>
 <script>
@@ -140,7 +140,6 @@ startInput.addEventListener('focus', () => {
   document.body.classList.add('blurred');
 });
 startInput.addEventListener('blur', () => {
-  // Small delay so it only removes after the picker is dismissed
   setTimeout(() => {
     document.body.classList.remove('blurred');
   }, 100);
@@ -186,7 +185,14 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
   const dateVal = startInput.value;
   const workDays = 4;
   const offDays = 2;
-  const cycles = parseInt(cyclesSelect.value) || 1;
+
+  // Moon and Sun: always 4 cycles (4 groups of 4 work + 2 off)
+  let cycles;
+  if (title === '🌙' || title === '☀️') {
+    cycles = 4;
+  } else {
+    cycles = parseInt(cyclesSelect.value) || 1;
+  }
 
   if (!title || !dateVal || cycles < 1) {
     showStatus('Escolhe o tipo e a data.', 'error');
