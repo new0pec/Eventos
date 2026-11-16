@@ -52,21 +52,25 @@
     gap: 12px;
     margin-bottom: 20px;
   }
-  .type-btn {
+  button.type-btn {
+    background-color: #2c2c2e !important;
     background: #2c2c2e !important;
-    border: 2px solid #3a3a3c;
+    border: 2px solid #3a3a3c !important;
     border-radius: 16px;
     padding: 18px 10px;
     font-size: 17px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.15s;
-    color: var(--text);
+    color: #f5f5f7 !important;
     text-align: center;
+    -webkit-appearance: none;
+    appearance: none;
   }
-  .type-btn.selected {
+  button.type-btn.selected {
+    background-color: #6a6a6e !important;
     background: #6a6a6e !important;
-    border-color: var(--accent);
+    border-color: #0a84ff !important;
     box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.35);
   }
   input, select {
