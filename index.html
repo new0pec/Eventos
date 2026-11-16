@@ -236,15 +236,17 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
   e.preventDefault();
   const title = titleInput.value;
   const dateVal = startInput.value;
-  const cycles = parseInt(cyclesSelect.value) || 1;
+  const times = parseInt(cyclesSelect.value) || 1;
 
-  // Padrão pré-definido (Lua, Sol, Férias): 4 dias ocupados + 2 em branco
-  // Folgas: 2 dias + 4 em branco
+  // Lua, Sol, Férias: 4 grupos de (4 dias + 2 em branco) por cada "vez"
+  // Folgas: 2 dias + 4 em branco por cada "vez"
   let workDays = 4;
   let offDays = 2;
+  let groupsPerTime = 4;
   if (title === 'Folgas') {
     workDays = 2;
     offDays = 4;
+    groupsPerTime = 1;
   }
 
   if (!title) {
@@ -255,10 +257,12 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
     showStatus('Escolhe o dia para começar.', 'error');
     return;
   }
-  if (cycles < 1) {
+  if (times < 1) {
     showStatus('Escolhe quantas vezes.', 'error');
     return;
   }
+
+  const totalGroups = groupsPerTime * times;
 
   const [year, month, day] = dateVal.split('-').map(Number);
   let current = new Date(year, month - 1, day);
@@ -272,7 +276,7 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
   ];
 
   let eventCount = 0;
-  for (let c = 0; c < cycles; c++) {
+  for (let c = 0; c < totalGroups; c++) {
     for (let d = 0; d < workDays; d++) {
       const end = new Date(current);
       end.setDate(end.getDate() + 1);
