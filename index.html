@@ -485,7 +485,18 @@ function showStatus(msg, type) {
   const el = document.getElementById('status');
   el.textContent = msg;
   el.className = 'status ' + type;
-  setTimeout(() => el.className = 'status', 6000);
+  clearTimeout(showStatus._t);
+  // Erros desaparecem; mensagens de sucesso ficam visíveis
+  if (type === 'error') showStatus._t = setTimeout(() => el.className = 'status', 6000);
+}
+
+function downloadIcs(url) {
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'eventos.ics';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 
 function openCalendar(url) {
@@ -499,10 +510,16 @@ function openCalendar(url) {
 }
 
 openCalBtn.addEventListener('click', () => {
-  if (currentIcsUrl) {
-    openCalendar(currentIcsUrl);
-  }
+  if (!currentIcsUrl) return;
+  if (isIOSDevice()) openCalendar(currentIcsUrl);
+  else downloadIcs(currentIcsUrl);
 });
+
+// iPad em modo desktop identifica-se como "Macintosh" — distingue pelo ecrã tátil
+function isIOSDevice() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+}
 
 document.getElementById('eventForm').addEventListener('submit', function(e) {
   e.preventDefault();
@@ -570,8 +587,8 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
   lines.push('END:VCALENDAR');
 
   const ics = lines.join('\r\n');
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-  const isMac = /Macintosh/.test(navigator.userAgent);
+  const isIOS = isIOSDevice();
+  const isMac = !isIOS && /Macintosh/.test(navigator.userAgent);
 
   // Revoke previous URL
   if (currentIcsUrl) {
@@ -588,17 +605,17 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
     showStatus(`${eventCount} evento${eventCount > 1 ? 's' : ''} “${title}” (${periodo}) prontos — confirma “Adicionar tudo” no Calendário.`, 'success');
     openCalBtn.classList.add('show');
   } else if (isMac) {
-    // No Mac, mostra botão para o utilizador clicar (mais fiável)
+    // No Mac o browser não pode abrir o Calendário sozinho: descarrega o .ics
+    // e o utilizador abre-o (clique na transferência) → Calendário importa
+    downloadIcs(currentIcsUrl);
+    openCalBtn.textContent = 'Descarregar outra vez';
     openCalBtn.classList.add('show');
-    showStatus('Clica em "Abrir no Calendário" para adicionar os eventos.', 'success');
+    showStatus(`${eventCount} eventos “${title}” em eventos.ics — abre o ficheiro nas Transferências para adicionar ao Calendário.`, 'success');
   } else {
-    const a = document.createElement('a');
-    a.href = currentIcsUrl;
-    a.download = 'eventos.ics';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    showStatus('Ficheiro .ics descarregado — abre-o para adicionar ao calendário.', 'success');
+    downloadIcs(currentIcsUrl);
+    openCalBtn.textContent = 'Descarregar outra vez';
+    openCalBtn.classList.add('show');
+    showStatus('Ficheiro eventos.ics descarregado — abre-o para adicionar ao calendário.', 'success');
   }
 });
 </script>
