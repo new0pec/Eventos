@@ -111,6 +111,20 @@
   .status { margin-top: 12px; padding: 12px; border-radius: 12px; font-size: 14px; text-align: center; display: none; }
   .status.success { display: block; background: rgba(48,209,88,0.15); color: var(--success); }
   .status.error { display: block; background: rgba(255,69,58,0.15); color: var(--danger); }
+  .open-cal-btn {
+    display: none;
+    width: 100%;
+    background: #30d158;
+    color: white;
+    border: none;
+    border-radius: 14px;
+    padding: 14px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 12px;
+  }
+  .open-cal-btn.show { display: block; }
 
   /* Custom Date Picker - Desktop */
   .datepicker-overlay {
@@ -220,7 +234,6 @@
     color: white;
   }
 
-  /* Hide custom picker on mobile, show native */
   @media (max-width: 768px) {
     .datepicker-overlay { display: none !important; }
     .date-display { display: none; }
@@ -281,6 +294,7 @@
     </select>
 
     <button type="submit" class="primary">Adicionar Eventos</button>
+    <button type="button" class="open-cal-btn" id="openCalBtn">Abrir no Calendário</button>
     <div id="status" class="status"></div>
   </form>
 </div>
@@ -314,10 +328,12 @@ const prevMonthBtn = document.getElementById('prevMonth');
 const nextMonthBtn = document.getElementById('nextMonth');
 const cancelDateBtn = document.getElementById('cancelDate');
 const confirmDateBtn = document.getElementById('confirmDate');
+const openCalBtn = document.getElementById('openCalBtn');
 
 let selectedDate = new Date();
 let viewDate = new Date();
 let dateTouched = false;
+let currentIcsUrl = null;
 
 function formatDate(d) {
   return d.toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -476,6 +492,22 @@ function showStatus(msg, type) {
   setTimeout(() => el.className = 'status', 6000);
 }
 
+function openCalendar(url) {
+  const a = document.createElement('a');
+  a.href = url;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+openCalBtn.addEventListener('click', () => {
+  if (currentIcsUrl) {
+    openCalendar(currentIcsUrl);
+  }
+});
+
 document.getElementById('eventForm').addEventListener('submit', function(e) {
   e.preventDefault();
   const title = titleInput.value;
@@ -541,39 +573,32 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
   const isMac = /Macintosh/.test(navigator.userAgent);
 
+  // Revoke previous URL
+  if (currentIcsUrl) {
+    URL.revokeObjectURL(currentIcsUrl);
+  }
+
+  const blob = new Blob([ics], { type: 'text/calendar' });
+  currentIcsUrl = URL.createObjectURL(blob);
+
   if (isIOS) {
-    // iPhone: blob URL
-    const blob = new Blob([ics], { type: 'text/calendar' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.target = '_blank';
-    a.rel = 'noopener';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 15000);
+    openCalendar(currentIcsUrl);
+    showStatus(`A criar ${eventCount} eventos “${title}” (${months} mês${months > 1 ? 'es' : ''})…`, 'success');
+    setTimeout(() => alert('Eventos adicionados com sucesso!'), 500);
   } else if (isMac) {
-    // Mac: data URI (evita prompt de download)
-    const dataUri = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(ics);
-    window.location.href = dataUri;
+    // No Mac, mostra botão para o utilizador clicar (mais fiável)
+    openCalBtn.classList.add('show');
+    showStatus('Clica em "Abrir no Calendário" para adicionar os eventos.', 'success');
   } else {
-    // Outros: download
-    const blob = new Blob([ics], { type: 'text/calendar' });
-    const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url;
+    a.href = currentIcsUrl;
     a.download = 'eventos.ics';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 15000);
-  }
-
-  showStatus(`A criar ${eventCount} eventos “${title}” (${months} mês${months > 1 ? 'es' : ''})…`, 'success');
-  setTimeout(() => {
+    showStatus('Ficheiro .ics descarregado.', 'success');
     alert('Eventos adicionados com sucesso!');
-  }, 500);
+  }
 });
 </script>
 </body>
