@@ -755,24 +755,18 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
     eventCount++;
   }
 
-  // 🌙: os 2 dias livres de cada ciclo levam o título ☀️; nos outros ficam em branco
-  const offTitle = title === '🌙' ? '☀️' : null;
+  // 🌙: os blocos de trabalho alternam 🌙 / ☀️ (começa em 🌙); os dias livres ficam em branco
+  const blockTitle = (c) => (title === '🌙' && c % 2 === 1) ? '☀️' : title;
 
   for (let c = 0; c < totalGroups; c++) {
+    const summary = blockTitle(c);
     for (let d = 0; d < workDays; d++) {
       const end = new Date(current);
       end.setDate(end.getDate() + 1);
-      pushEvent(current, end, title);
+      pushEvent(current, end, summary);
       current.setDate(current.getDate() + 1);
     }
-    for (let d = 0; d < offDays; d++) {
-      if (offTitle) {
-        const end = new Date(current);
-        end.setDate(end.getDate() + 1);
-        pushEvent(current, end, offTitle);
-      }
-      current.setDate(current.getDate() + 1);
-    }
+    current.setDate(current.getDate() + offDays);
   }
   lines.push('END:VCALENDAR');
 
