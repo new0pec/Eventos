@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#4a4a4e">
 <meta name="color-scheme" content="dark">
 <title>Eventos</title>
 <style>
@@ -20,6 +21,10 @@
     --radius: 16px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  html {
+    background: linear-gradient(225deg, #6a6a6e 0%, #4a4a4e 50%, #2a2a2e 100%);
+    min-height: 100%;
+  }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
     background: linear-gradient(225deg, #6a6a6e 0%, #4a4a4e 50%, #2a2a2e 100%);
@@ -31,6 +36,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    margin: 0;
   }
   body.blurred {
     filter: blur(8px) brightness(0.65);
