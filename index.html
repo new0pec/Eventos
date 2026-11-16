@@ -782,7 +782,7 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
 
   // Limpa mensagens de erro anteriores
   document.getElementById('status').className = 'status';
-  const resumo = `${eventCount} evento${eventCount > 1 ? 's' : ''} “${title}” · ${months} ${months > 1 ? 'meses' : 'mês'}`;
+  const resumo = `${eventCount} evento${eventCount > 1 ? 's' : ''} “${title === "🌙" ? "Trabalho" : title}” · ${months} ${months > 1 ? 'meses' : 'mês'}`;
 
   if (isIOS) {
     // No iPhone/iPad o Calendário abre sozinho
