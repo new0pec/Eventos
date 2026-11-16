@@ -54,7 +54,7 @@
     text-align: center;
   }
   .type-btn.selected {
-    background: #3a3a3c;
+    background: #5a5a5e;
     border-color: var(--accent);
     box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.35);
   }
@@ -187,8 +187,16 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
   const offDays = 2;
   const cycles = parseInt(cyclesSelect.value) || 1;
 
-  if (!title || !dateVal || cycles < 1) {
-    showStatus('Escolhe o tipo e a data.', 'error');
+  if (!title) {
+    showStatus('Escolhe um tipo de evento.', 'error');
+    return;
+  }
+  if (!dateVal) {
+    showStatus('Escolhe a data.', 'error');
+    return;
+  }
+  if (cycles < 1) {
+    showStatus('Escolhe quantas vezes.', 'error');
     return;
   }
 
