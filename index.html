@@ -238,17 +238,13 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
   const dateVal = startInput.value;
   const cycles = parseInt(cyclesSelect.value) || 1;
 
-  // Padrões:
+  // Padrão pré-definido (Lua, Sol, Férias): 4 dias ocupados + 2 em branco
   // Folgas: 2 dias + 4 em branco
-  // Férias, 🌙, ☀️: 4 dias + 2 em branco
   let workDays = 4;
   let offDays = 2;
   if (title === 'Folgas') {
     workDays = 2;
     offDays = 4;
-  } else if (title === 'Férias') {
-    workDays = 4;
-    offDays = 2;
   }
 
   if (!title) {
