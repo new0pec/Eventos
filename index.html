@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Adicionar Evento ao Calendário</title>
+<title>Eventos</title>
 <style>
   :root {
     --bg: #0f0f12;
@@ -13,7 +13,6 @@
     --text: #f5f5f7;
     --text-secondary: #a1a1aa;
     --accent: #0a84ff;
-    --accent-hover: #409cff;
     --border: #2c2c2e;
     --success: #30d158;
     --danger: #ff453a;
@@ -26,24 +25,51 @@
     color: var(--text);
     min-height: 100vh;
     padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom);
+    transition: filter 0.2s ease;
+  }
+  body.blurred {
+    filter: blur(6px) brightness(0.7);
   }
   .container { max-width: 480px; margin: 0 auto; padding: 24px 0 40px; }
   header { text-align: center; margin-bottom: 28px; }
   header h1 { font-size: 28px; font-weight: 700; margin-bottom: 6px; }
-  header p { color: var(--text-secondary); font-size: 15px; }
   .card { background: var(--card); border-radius: var(--radius); padding: 20px; border: 1px solid var(--border); }
-  label { display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-  input, textarea, select {
+  label { display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .type-btn {
+    background: #2c2c2e;
+    border: 2px solid #3a3a3c;
+    border-radius: 16px;
+    padding: 18px 10px;
+    font-size: 17px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--text);
+    text-align: center;
+  }
+  .type-btn.selected {
+    border-color: var(--accent);
+    background: rgba(10, 132, 255, 0.15);
+    box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.3);
+  }
+  input, select {
     width: 100%; background: #2c2c2e; border: 1px solid #3a3a3c; border-radius: 12px;
     padding: 14px 16px; font-size: 17px; color: var(--text); font-family: inherit;
     outline: none; margin-bottom: 16px; appearance: none; -webkit-appearance: none;
   }
-  select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23a1a1aa' d='M1.41 0L6 4.58 10.59 0 12 1.41l-6 6-6-6z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 16px center; padding-right: 40px; }
-  input:focus, textarea:focus, select:focus { border-color: var(--accent); }
-  textarea { min-height: 80px; resize: vertical; }
-  .more-toggle { display: flex; align-items: center; justify-content: space-between; padding: 12px 4px; color: var(--accent); font-size: 16px; font-weight: 500; cursor: pointer; }
-  .more-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
-  .more-content.open { max-height: 300px; }
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23a1a1aa' d='M1.41 0L6 4.58 10.59 0 12 1.41l-6 6-6-6z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    padding-right: 40px;
+  }
+  input:focus, select:focus { border-color: var(--accent); }
   button.primary {
     width: 100%; background: var(--accent); color: white; border: none; border-radius: 14px;
     padding: 16px; font-size: 17px; font-weight: 600; cursor: pointer; margin-top: 8px;
@@ -57,45 +83,71 @@
 <body>
 <div class="container">
   <header>
-    <h1>Adicionar Evento</h1>
-    <p>Eventos de dia inteiro para o Calendário do iPhone</p>
+    <h1>Eventos</h1>
   </header>
   <form id="eventForm" class="card">
-    <label for="title">Tipo de evento *</label>
-    <select id="title" required>
-      <option value="" disabled selected>Escolhe o tipo</option>
-      <option value="🌙">🌙</option>
-      <option value="☀️">☀️</option>
-      <option value="Folgas">Folgas</option>
-      <option value="Férias">Férias</option>
-    </select>
-    <label for="eventDate">Data *</label>
-    <input type="date" id="eventDate" required>
-    <div class="more-toggle" id="moreToggle">Ver mais ▾</div>
-    <div class="more-content" id="moreContent">
-      <label for="location">Local (opcional)</label>
-      <input type="text" id="location" placeholder="Ex: Lisboa, Casa...">
-      <label for="description">Notas (opcional)</label>
-      <textarea id="description" placeholder="Detalhes adicionais..."></textarea>
+    <label>Tipo de evento *</label>
+    <div class="buttons">
+      <button type="button" class="type-btn" data-value="🌙">🌙</button>
+      <button type="button" class="type-btn" data-value="☀️">☀️</button>
+      <button type="button" class="type-btn" data-value="Folgas">Folgas</button>
+      <button type="button" class="type-btn" data-value="Férias">Férias</button>
     </div>
-    <button type="submit" class="primary">Adicionar ao Calendário</button>
+    <input type="hidden" id="title" required>
+
+    <label for="startDate">Dia para começar</label>
+    <input type="date" id="startDate" required>
+
+    <label for="cycles">Vais adicionar quantas vezes?</label>
+    <select id="cycles" required>
+      <option value="1" selected>1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+      <option value="6">6</option>
+      <option value="7">7</option>
+      <option value="8">8</option>
+      <option value="9">9</option>
+      <option value="10">10</option>
+      <option value="12">12</option>
+      <option value="15">15</option>
+      <option value="20">20</option>
+      <option value="30">30</option>
+      <option value="50">50</option>
+    </select>
+
+    <button type="submit" class="primary">Adicionar Eventos</button>
     <div id="status" class="status"></div>
   </form>
   <div class="help">
-    <strong>Como usar no iPhone:</strong><br>
-    1. Escolhe o tipo e a data.<br>
-    2. Toca em <strong>Adicionar ao Calendário</strong>.<br>
-    3. Se aparecer a pré-visualização, toca em <strong>Adicionar</strong>.<br>
-    4. Se não abrir, toca no link <strong>Abrir no Calendário</strong> que aparece.
+    <strong>Como funciona:</strong><br>
+    Ao escolheres 🌙 ou ☀️, o padrão é 4 dias de evento + 2 de pausa.<br>
+    O título no calendário será o ícone escolhido.
   </div>
 </div>
 <script>
-const dateInput = document.getElementById('eventDate');
-dateInput.value = new Date().toISOString().split('T')[0];
+const startInput = document.getElementById('startDate');
+startInput.value = new Date().toISOString().split('T')[0];
 
-document.getElementById('moreToggle').addEventListener('click', function() {
-  this.classList.toggle('open');
-  document.getElementById('moreContent').classList.toggle('open');
+// Blur background when date picker is open (iOS native picker)
+startInput.addEventListener('focus', () => document.body.classList.add('blurred'));
+startInput.addEventListener('blur', () => document.body.classList.remove('blurred'));
+startInput.addEventListener('change', () => document.body.classList.remove('blurred'));
+
+const titleInput = document.getElementById('title');
+const cyclesSelect = document.getElementById('cycles');
+const typeButtons = document.querySelectorAll('.type-btn');
+
+let selectedTitle = '';
+
+typeButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    typeButtons.forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedTitle = btn.dataset.value;
+    titleInput.value = selectedTitle;
+  });
 });
 
 function toICSDate(date, dateOnly) {
@@ -103,9 +155,9 @@ function toICSDate(date, dateOnly) {
   const m = String(date.getMonth() + 1).padStart(2, '0');
   const d = String(date.getDate()).padStart(2, '0');
   if (dateOnly) return `${y}${m}${d}`;
-  const h = String(date.getHours()).padStart(2, '0');
-  const min = String(date.getMinutes()).padStart(2, '0');
-  const s = String(date.getSeconds()).padStart(2, '0');
+  const h = String(date.getUTCHours()).padStart(2, '0');
+  const min = String(date.getUTCMinutes()).padStart(2, '0');
+  const s = String(date.getUTCSeconds()).padStart(2, '0');
   return `${y}${m}${d}T${h}${min}${s}Z`;
 }
 function generateUID() { return Date.now() + '-' + Math.random().toString(36).slice(2) + '@evento'; }
@@ -114,55 +166,92 @@ function showStatus(msg, type) {
   const el = document.getElementById('status');
   el.textContent = msg;
   el.className = 'status ' + type;
-  setTimeout(() => el.className = 'status', 5000);
-}
-function showFallbackLink(href) {
-  let c = document.getElementById('fallbackLink');
-  if (!c) { c = document.createElement('div'); c.id = 'fallbackLink'; c.style.marginTop = '12px'; c.style.textAlign = 'center'; document.getElementById('status').after(c); }
-  c.innerHTML = `<a href="${href}" style="color:#0a84ff;font-weight:600;text-decoration:underline;">Abrir no Calendário</a>`;
+  setTimeout(() => el.className = 'status', 6000);
 }
 
 document.getElementById('eventForm').addEventListener('submit', function(e) {
   e.preventDefault();
-  const title = document.getElementById('title').value;
-  const dateVal = dateInput.value;
-  if (!title || !dateVal) { showStatus('Preenche o tipo e a data.', 'error'); return; }
+  const title = titleInput.value;
+  const dateVal = startInput.value;
+  const workDays = 4;
+  const offDays = 2;
+  const cycles = parseInt(cyclesSelect.value) || 1;
+  if (!title || !dateVal || cycles < 1) {
+    showStatus('Escolhe o tipo e a data.', 'error');
+    return;
+  }
+
   const [year, month, day] = dateVal.split('-').map(Number);
-  const start = new Date(year, month - 1, day);
-  const end = new Date(start); end.setDate(end.getDate() + 1);
-  const location = document.getElementById('location').value.trim();
-  const description = document.getElementById('description').value.trim();
+  let current = new Date(year, month - 1, day);
   const now = new Date();
   const lines = [
-    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//AdicionarEvento//iPhone//PT',
-    'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'BEGIN:VEVENT',
-    'UID:' + generateUID(), 'DTSTAMP:' + toICSDate(now, false),
-    'SUMMARY:' + escapeICS(title),
-    'DTSTART;VALUE=DATE:' + toICSDate(start, true),
-    'DTEND;VALUE=DATE:' + toICSDate(end, true)
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Eventos//iPhone//PT',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH'
   ];
-  if (location) lines.push('LOCATION:' + escapeICS(location));
-  if (description) lines.push('DESCRIPTION:' + escapeICS(description));
-  lines.push('END:VEVENT', 'END:VCALENDAR');
+
+  let eventCount = 0;
+  for (let c = 0; c < cycles; c++) {
+    for (let d = 0; d < workDays; d++) {
+      const end = new Date(current);
+      end.setDate(end.getDate() + 1);
+      lines.push(
+        'BEGIN:VEVENT',
+        'UID:' + generateUID() + '-' + eventCount,
+        'DTSTAMP:' + toICSDate(now, false),
+        'SUMMARY:' + escapeICS(title),
+        'DTSTART;VALUE=DATE:' + toICSDate(current, true),
+        'DTEND;VALUE=DATE:' + toICSDate(end, true),
+        'END:VEVENT'
+      );
+      eventCount++;
+      current.setDate(current.getDate() + 1);
+    }
+    current.setDate(current.getDate() + offDays);
+  }
+  lines.push('END:VCALENDAR');
+
   const ics = lines.join('\r\n');
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
   const blob = new Blob([ics], { type: 'text/calendar' });
   const url = URL.createObjectURL(blob);
   const dataUri = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(ics);
+
   if (isIOS) {
     const a = document.createElement('a');
-    a.href = url; a.target = '_blank'; a.rel = 'noopener';
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
     showFallbackLink(dataUri);
-    showStatus('Se o Calendário não abrir, toca no link abaixo.', 'success');
+    showStatus(`A criar ${eventCount} eventos “${title}”…`, 'success');
   } else {
     const a = document.createElement('a');
-    a.href = url; a.download = 'evento.ics';
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    a.href = url;
+    a.download = 'eventos.ics';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
     showStatus('Ficheiro .ics descarregado.', 'success');
   }
-  setTimeout(() => URL.revokeObjectURL(url), 10000);
+  setTimeout(() => URL.revokeObjectURL(url), 15000);
 });
+
+function showFallbackLink(href) {
+  let c = document.getElementById('fallbackLink');
+  if (!c) {
+    c = document.createElement('div');
+    c.id = 'fallbackLink';
+    c.style.marginTop = '12px';
+    c.style.textAlign = 'center';
+    document.getElementById('status').after(c);
+  }
+  c.innerHTML = `<a href="${href}" style="color:#0a84ff;font-weight:600;text-decoration:underline;">Abrir no Calendário</a>`;
+}
 </script>
 </body>
 </html>
