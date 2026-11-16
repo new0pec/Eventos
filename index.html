@@ -401,7 +401,7 @@
       <button type="button" id="nextMonth">›</button>
     </div>
     <div class="datepicker-weekdays">
-      <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
+      <div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div><div>Dom</div>
     </div>
     <div class="datepicker-days" id="daysGrid"></div>
     <div class="datepicker-actions">
@@ -450,7 +450,8 @@ function renderCalendar() {
 
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
-  const startDay = firstDay.getDay();
+  // Semana começa à segunda-feira (getDay: 0 = domingo)
+  const startDay = (firstDay.getDay() + 6) % 7;
 
   daysGrid.innerHTML = '';
 
