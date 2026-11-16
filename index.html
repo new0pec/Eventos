@@ -74,13 +74,58 @@
     padding: 24px 0;
     width: 100%;
   }
-  header { text-align: center; margin-bottom: 24px; }
-  header h1 {
-    font-size: 28px;
-    font-weight: 700;
+  header {
+    text-align: center;
+    margin-bottom: 22px;
+    perspective: 700px;               /* profundidade da cena 3D */
+  }
+  /* Título 3D: face com reflexo + camada de relevo por trás.
+     --rx / --ry (inclinação) e --dx / --dy (direção do relevo) vêm do JS */
+  .t3d {
+    --rx: 8deg; --ry: -14deg; --dx: 1; --dy: 0.6;
+    --lx: 35%; --ly: 25%;
+    position: relative;
+    display: inline-block;
+    font-size: 44px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    line-height: 1.1;
+    padding: 4px 12px 10px;
+    transform: rotateX(var(--rx)) rotateY(var(--ry));
+    transform-style: preserve-3d;
+    will-change: transform;
+    cursor: default;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: pan-y;
+  }
+  .t3d-face {
+    position: relative;
+    display: block;
     color: var(--text);
-    letter-spacing: -0.3px;
-    text-shadow: 0 1px 12px rgba(255, 255, 255, 0.7);
+    background:
+      radial-gradient(circle at var(--lx) var(--ly), #8a6a52 0%, rgba(138,106,82,0) 45%),
+      linear-gradient(180deg, #3b2e23 0%, #2e241c 55%, #241b14 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .t3d-depth {
+    position: absolute;
+    inset: 4px 12px 10px;
+    color: #b39478;
+    /* relevo mais claro que a face (lateral iluminada), escurece para o fundo,
+       seguido de uma sombra suave pousada no fundo */
+    text-shadow:
+      calc(var(--dx) * 1px) calc(var(--dy) * 1px) 0 #b09074,
+      calc(var(--dx) * 2px) calc(var(--dy) * 2px) 0 #a7876b,
+      calc(var(--dx) * 3px) calc(var(--dy) * 3px) 0 #9d7e62,
+      calc(var(--dx) * 4px) calc(var(--dy) * 4px) 0 #93745a,
+      calc(var(--dx) * 5px) calc(var(--dy) * 5px) 0 #886a51,
+      calc(var(--dx) * 6px) calc(var(--dy) * 6px) 0 #7c6048,
+      calc(var(--dx) * 10px) calc(var(--dy) * 12px) 14px rgba(74, 59, 46, 0.3);
+    transform: translateZ(-1px);
+    pointer-events: none;
   }
 
   /* Superfícies de vidro */
@@ -432,7 +477,7 @@
   }
   @media (min-width: 600px) {
     .container { max-width: 540px; padding: 32px 0; }
-    header h1 { font-size: 32px; }
+    .t3d { font-size: 56px; }
     .card { padding: 28px; }
     .type-btn { padding: 20px 12px; font-size: 18px; }
     .type-btn.selected { padding: 19px 11px; }
@@ -446,14 +491,14 @@
     .type-btn.selected { padding: 13px 7px; }
     .pd-n { font-size: 13px; }
     .card { padding: 16px; }
-    header h1 { font-size: 24px; }
+    .t3d { font-size: 38px; }
   }
 </style>
 </head>
 <body>
 <div class="container">
   <header>
-    <h1>Eventos</h1>
+    <h1 class="t3d" id="title3d"><span class="t3d-depth" aria-hidden="true">Eventos</span><span class="t3d-face">Eventos</span></h1>
   </header>
   <form id="eventForm" class="card glass">
     <div class="card-top">
@@ -889,6 +934,57 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
     showToast('eventos.ics descarregado', resumo + ' Abre o ficheiro nas Transferências para os adicionar ao Calendário.');
   }
 });
+
+// Título 3D: inclina na direção do ponteiro (rato ou dedo) e volta ao repouso.
+// Leve: só corre animação enquanto há movimento; respeita "reduzir movimento".
+(function title3d() {
+  const el = document.getElementById('title3d');
+  const REST = { rx: 8, ry: -14 };      // pose de repouso (graus)
+  const MAX = 22;                       // inclinação máxima
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  let cur = { ...REST }, target = { ...REST }, raf = 0, idleTimer = 0;
+
+  function apply() {
+    el.style.setProperty('--rx', cur.rx.toFixed(2) + 'deg');
+    el.style.setProperty('--ry', cur.ry.toFixed(2) + 'deg');
+    // o relevo cresce para o lado oposto ao da inclinação
+    el.style.setProperty('--dx', (-cur.ry / MAX * 1.1).toFixed(3));
+    el.style.setProperty('--dy', (cur.rx / MAX * 1.1).toFixed(3));
+    // reflexo segue a luz (ponteiro)
+    el.style.setProperty('--lx', (50 + cur.ry / MAX * 45).toFixed(1) + '%');
+    el.style.setProperty('--ly', (50 - cur.rx / MAX * 45).toFixed(1) + '%');
+  }
+  function tick() {
+    cur.rx += (target.rx - cur.rx) * 0.12;
+    cur.ry += (target.ry - cur.ry) * 0.12;
+    apply();
+    if (Math.abs(target.rx - cur.rx) > 0.05 || Math.abs(target.ry - cur.ry) > 0.05) {
+      raf = requestAnimationFrame(tick);
+    } else { raf = 0; }
+  }
+  function aim(x, y) {
+    if (reduce.matches) return;
+    const r = el.getBoundingClientRect();
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    // distância normalizada ao centro do título, limitada a [-1, 1]
+    const nx = Math.max(-1, Math.min(1, (x - cx) / (window.innerWidth / 2)));
+    const ny = Math.max(-1, Math.min(1, (y - cy) / (window.innerHeight / 2)));
+    target = { rx: -ny * MAX, ry: nx * MAX };
+    if (!raf) raf = requestAnimationFrame(tick);
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(rest, 2500);
+  }
+  function rest() {
+    target = { ...REST };
+    if (!raf) raf = requestAnimationFrame(tick);
+  }
+  window.addEventListener('pointermove', (e) => aim(e.clientX, e.clientY), { passive: true });
+  window.addEventListener('pointerdown', (e) => aim(e.clientX, e.clientY), { passive: true });
+  document.addEventListener('pointerleave', rest);
+  window.addEventListener('blur', rest);
+  reduce.addEventListener?.('change', () => { cur = { ...REST }; target = { ...REST }; apply(); });
+  apply();
+})();
 
 // Estado inicial
 updateDisplay();
