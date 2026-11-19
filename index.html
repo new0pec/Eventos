@@ -38,6 +38,9 @@
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html {
+    /* Sem zoom por toque duplo (toques rápidos nas setas do calendário);
+       o zoom com dois dedos continua disponível */
+    touch-action: manipulation;
     min-height: 100%;
     background: #dbc3aa;
   }
@@ -979,6 +982,17 @@ document.getElementById('eventForm').addEventListener('submit', function(e) {
   reduce.addEventListener?.('change', () => { cur = { ...REST }; target = { ...REST }; apply(); });
   apply();
 })();
+
+// Safari antigo ignora touch-action: evita o zoom do toque duplo nos controlos
+let lastTouchEnd = 0;
+document.addEventListener('touchend', (e) => {
+  const now = Date.now();
+  if (now - lastTouchEnd < 350 && e.target.closest('button, .datepicker-day, .type-btn, .date-display, a')) {
+    e.preventDefault();
+    e.target.click();
+  }
+  lastTouchEnd = now;
+}, { passive: false });
 
 // Estado inicial
 updateDisplay();
